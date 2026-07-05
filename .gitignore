@@ -25,3 +25,6 @@ uploads/
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated text extraction
+*_extracted.txt
