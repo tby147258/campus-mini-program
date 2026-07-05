@@ -1,0 +1,48 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/lostfound/index",
+    "pages/repair/index",
+    "pages/profile/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#2F5496",
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "校园综合服务",
+    "backgroundColor": "#f5f5f5"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#2F5496",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "images/tab_home.png",
+        "selectedIconPath": "images/tab_home_active.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/lostfound/index",
+        "iconPath": "images/tab_lost.png",
+        "selectedIconPath": "images/tab_lost_active.png",
+        "text": "失物招领"
+      },
+      {
+        "pagePath": "pages/repair/index",
+        "iconPath": "images/tab_repair.png",
+        "selectedIconPath": "images/tab_repair_active.png",
+        "text": "报修中心"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "iconPath": "images/tab_profile.png",
+        "selectedIconPath": "images/tab_profile_active.png",
+        "text": "个人中心"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

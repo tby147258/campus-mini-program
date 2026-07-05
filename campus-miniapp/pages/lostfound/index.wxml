@@ -1,0 +1,50 @@
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <input class="search-input" placeholder="搜索失物或寻物信息" value="{{searchText}}" bindinput="onSearchInput" />
+    <text class="search-btn" bindtap="onSearch">搜索</text>
+  </view>
+
+  <!-- 类型切换 Tabs -->
+  <view class="tabs">
+    <view class="tab-item {{type === 0 ? 'active' : ''}}" bindtap="switchType" data-type="0">失物招领</view>
+    <view class="tab-item {{type === 1 ? 'active' : ''}}" bindtap="switchType" data-type="1">寻物启事</view>
+  </view>
+
+  <!-- 发布按钮 -->
+  <view class="publish-btn" bindtap="goPublish">
+    <text class="publish-icon">+</text>
+    <text>发布</text>
+  </view>
+
+  <!-- 失物/寻物卡片列表 -->
+  <view wx:if="{{list.length > 0}}">
+    <view class="card" wx:for="{{list}}" wx:key="id" data-id="{{item.id}}">
+      <view class="card-header">
+        <text class="item-name">{{item.itemName}}</text>
+        <text class="type-tag {{item.type === 0 ? 'tag-lost' : 'tag-found'}}">
+          {{item.type === 0 ? '失物招领' : '寻物启事'}}
+        </text>
+      </view>
+      <view class="card-body">
+        <view class="info-row">
+          <text class="info-label">地点</text>
+          <text class="info-value">{{item.location}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">时间</text>
+          <text class="info-value">{{item.time}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.contact}}">
+          <text class="info-label">联系方式</text>
+          <text class="info-value">{{item.contact}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state">
+    <text>暂无相关信息</text>
+  </view>
+</view>

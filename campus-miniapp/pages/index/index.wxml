@@ -1,0 +1,46 @@
+<!-- pages/index/index.wxml -->
+<view class="container">
+  <!-- 轮播图 -->
+  <swiper class="swiper" indicator-dots autoplay circular>
+    <swiper-item wx:for="{{banners}}" wx:key="index">
+      <image src="{{item}}" class="swiper-img" mode="aspectFill" />
+    </swiper-item>
+  </swiper>
+
+  <!-- 天气卡片 -->
+  <view class="card weather-card">
+    <view class="weather-main">
+      <text class="weather-temp">{{weather.temp}}°C</text>
+      <text class="weather-text">{{weather.text}}</text>
+    </view>
+    <view class="weather-info">
+      <text>{{weather.city}} | {{weather.windDir}} {{weather.windScale}}级</text>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="grid-menu">
+    <view class="grid-item" bindtap="goLostFound">
+      <image class="grid-icon" src="/images/icon_lost.png" />
+      <text>失物招领</text>
+    </view>
+    <view class="grid-item" bindtap="goRepair">
+      <image class="grid-icon" src="/images/icon_repair.png" />
+      <text>报修中心</text>
+    </view>
+    <view class="grid-item" bindtap="goWeather">
+      <image class="grid-icon" src="/images/icon_weather.png" />
+      <text>天气查询</text>
+    </view>
+  </view>
+
+  <!-- 公告列表 -->
+  <view class="section-title">校园公告</view>
+  <view class="card" wx:for="{{announcements}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="announce-title">{{item.title}}</view>
+    <view class="announce-meta">
+      <text>{{item.category}}</text>
+      <text>{{item.createdAt}}</text>
+    </view>
+  </view>
+</view>

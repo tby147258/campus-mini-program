@@ -1,0 +1,83 @@
+<view class="container">
+  <!-- 报修申请表单 -->
+  <view class="card">
+    <view class="section-title">提交报修申请</view>
+
+    <view class="form-item">
+      <text class="form-label">报修类型</text>
+      <picker mode="selector" range="{{repairTypes}}" bindchange="onTypeChange">
+        <view class="picker-value">{{form.repairType || '请选择报修类型'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">报修地点</text>
+      <input class="form-input" placeholder="请输入具体地点（如：3号宿舍楼201室）" value="{{form.location}}" bindinput="onFieldChange" data-field="location" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">问题描述</text>
+      <textarea class="form-textarea" placeholder="请详细描述故障情况" value="{{form.description}}" bindinput="onFieldChange" data-field="description" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">图片上传</text>
+      <view class="upload-area">
+        <view class="upload-preview" wx:for="{{form.images}}" wx:key="index">
+          <image class="upload-img" src="{{item}}" mode="aspectFill" />
+          <text class="upload-del" bindtap="removeImage" data-index="{{index}}">×</text>
+        </view>
+        <view class="upload-btn" bindtap="chooseImage">
+          <text class="upload-btn-icon">+</text>
+          <text class="upload-btn-text">上传图片</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">联系方式</text>
+      <input class="form-input" placeholder="请输入手机号" value="{{form.contact}}" bindinput="onFieldChange" data-field="contact" />
+    </view>
+
+    <button class="submit-btn" bindtap="submitRepair" loading="{{submitting}}">提交报修</button>
+  </view>
+
+  <!-- 我的报修记录 -->
+  <view class="section-title">我的报修记录</view>
+
+  <view wx:if="{{myOrders.length > 0}}">
+    <view class="card" wx:for="{{myOrders}}" wx:key="id" wx:for-item="order">
+      <view class="order-header">
+        <text class="order-no">单号：{{order.orderNo}}</text>
+        <text class="order-status status-{{order.status}}">
+          <text wx:if="{{order.status === 0}}">待处理</text>
+          <text wx:elif="{{order.status === 1}}">处理中</text>
+          <text wx:elif="{{order.status === 2}}">已完成</text>
+          <text wx:else>已取消</text>
+        </text>
+      </view>
+      <view class="order-body">
+        <view class="info-row">
+          <text class="info-label">类型</text>
+          <text class="info-value">{{order.repairType}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">地点</text>
+          <text class="info-value">{{order.location}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">提交时间</text>
+          <text class="info-value">{{order.createdAt}}</text>
+        </view>
+        <view class="info-row" wx:if="{{order.remark}}">
+          <text class="info-label">处理备注</text>
+          <text class="info-value">{{order.remark}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <text>暂无报修记录</text>
+  </view>
+</view>
