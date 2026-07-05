@@ -16,6 +16,7 @@ public class RepairOrder {
     private String room;         // 房间号
     private String description;
     private String images;       // JSON数组字符串
+    private String contactPerson;
     private String contactPhone;
     private Integer status;      // 0-待处理, 1-处理中, 2-已完成, 3-已驳回
     private String rejectReason;
@@ -26,6 +27,7 @@ public class RepairOrder {
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    private LocalDateTime estimatedCompleteTime;  // 预计完成时间，用于逾期提醒
     private LocalDateTime handleTime;
     private LocalDateTime completeTime;
 

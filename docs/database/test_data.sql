@@ -150,6 +150,16 @@ INSERT INTO operation_log (user_id, module, action, target_id, description, ip_a
 
 
 -- ============================================================
+-- 7. 系统配置数据 (4条)
+-- ============================================================
+INSERT INTO system_config (config_key, config_value, description) VALUES
+('site_name', '校园综合服务平台', '站点名称'),
+('admin_notify_phone', '13800000001', '管理员通知手机号'),
+('repair_overdue_hours', '48', '工单逾期判定小时数'),
+('weather_cache_minutes', '30', '天气查询缓存时间(分钟)');
+
+
+-- ============================================================
 -- 数据统计摘要
 -- ============================================================
 -- SELECT 'user' AS tbl, COUNT(*) AS cnt FROM user
@@ -157,8 +167,9 @@ INSERT INTO operation_log (user_id, module, action, target_id, description, ip_a
 -- UNION ALL SELECT 'lost_found', COUNT(*) FROM lost_found
 -- UNION ALL SELECT 'repair_order', COUNT(*) FROM repair_order
 -- UNION ALL SELECT 'repair_log', COUNT(*) FROM repair_log
--- UNION ALL SELECT 'operation_log', COUNT(*) FROM operation_log;
+-- UNION ALL SELECT 'operation_log', COUNT(*) FROM operation_log
+-- UNION ALL SELECT 'system_config', COUNT(*) FROM system_config;
 -- 预期结果：
 -- user: 5条, announcement: 8条, lost_found: 8条,
--- repair_order: 8条, repair_log: 8条, operation_log: 10条
+-- repair_order: 8条, repair_log: 8条, operation_log: 10条, system_config: 4条
 --

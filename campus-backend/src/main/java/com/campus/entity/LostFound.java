@@ -19,6 +19,9 @@ public class LostFound {
     private String contactPhone;
     private Integer status;     // 0-待审核, 1-已发布, 2-未通过, 3-已结束
     private Long userId;
+    private Long auditorId;     // 审核人ID
+    private LocalDateTime auditTime;
+    private String rejectReason;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;

@@ -10,6 +10,7 @@ public class User {
     @TableId(type = IdType.AUTO)
     private Long id;
     private String openId;
+    private String password;    // BCrypt加密，仅管理员使用
     private String nickname;
     private String avatar;
     private String studentNo;

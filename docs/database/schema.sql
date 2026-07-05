@@ -20,6 +20,7 @@ USE campus;
 CREATE TABLE IF NOT EXISTS user (
     id          BIGINT       NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
     open_id     VARCHAR(64)  NOT NULL                 COMMENT '微信OpenID',
+    password    VARCHAR(255) DEFAULT NULL             COMMENT '密码(BCrypt加密)，仅管理员使用',
     nickname    VARCHAR(64)  DEFAULT NULL             COMMENT '微信昵称',
     avatar      VARCHAR(255) DEFAULT NULL             COMMENT '头像URL',
     student_no  VARCHAR(32)  DEFAULT NULL             COMMENT '学号',
@@ -64,7 +65,7 @@ CREATE TABLE IF NOT EXISTS announcement (
 
 -- ============================================================
 -- 3. 失物信息表 (lost_found)
---    存储失物招领和寻物启事信息
+--    存储失物招领和寻物启事信息，包含审核详情
 -- ============================================================
 CREATE TABLE IF NOT EXISTS lost_found (
     id             BIGINT       NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
@@ -78,6 +79,9 @@ CREATE TABLE IF NOT EXISTS lost_found (
     contact_phone  VARCHAR(20)  DEFAULT NULL             COMMENT '联系电话',
     status         TINYINT      NOT NULL DEFAULT 0       COMMENT '状态：0-待审核, 1-已发布, 2-未通过, 3-已结束',
     user_id        BIGINT       NOT NULL                 COMMENT '发布人ID，关联user.id',
+    auditor_id     BIGINT       DEFAULT NULL             COMMENT '审核人ID，关联user.id',
+    audit_time     DATETIME     DEFAULT NULL             COMMENT '审核时间',
+    reject_reason  VARCHAR(255) DEFAULT NULL             COMMENT '驳回原因',
     created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     is_deleted     TINYINT      NOT NULL DEFAULT 0       COMMENT '逻辑删除：0-未删除, 1-已删除',
@@ -86,6 +90,7 @@ CREATE TABLE IF NOT EXISTS lost_found (
     INDEX idx_category (category),
     INDEX idx_status (status),
     INDEX idx_user_id (user_id),
+    INDEX idx_auditor_id (auditor_id),
     INDEX idx_created_at (created_at),
     INDEX idx_type_status (type, status),               -- 复合索引：按类型+状态查询
     INDEX idx_location (location)
@@ -94,28 +99,30 @@ CREATE TABLE IF NOT EXISTS lost_found (
 
 -- ============================================================
 -- 4. 报修工单表 (repair_order)
---    存储设施报修工单信息
+--    存储设施报修工单信息，支持全流程状态流转和逾期提醒
 -- ============================================================
 CREATE TABLE IF NOT EXISTS repair_order (
-    id             BIGINT       NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
-    order_no       VARCHAR(32)  NOT NULL                 COMMENT '工单编号，格式：R+年月日+6位序列',
-    repair_type    VARCHAR(32)  NOT NULL                 COMMENT '报修类型：电器/水暖/门窗/网络/其他',
-    campus         VARCHAR(32)  DEFAULT NULL             COMMENT '校区',
-    building       VARCHAR(32)  DEFAULT NULL             COMMENT '楼栋',
-    room           VARCHAR(32)  DEFAULT NULL             COMMENT '房间号',
-    description    TEXT         NOT NULL                 COMMENT '故障描述',
-    images         VARCHAR(500) DEFAULT NULL             COMMENT '图片URL列表，JSON数组格式',
-    contact_phone  VARCHAR(20)  DEFAULT NULL             COMMENT '联系电话',
-    status         TINYINT      NOT NULL DEFAULT 0       COMMENT '状态：0-待处理, 1-处理中, 2-已完成, 3-已驳回',
-    reject_reason  VARCHAR(255) DEFAULT NULL             COMMENT '驳回原因',
-    handle_result  VARCHAR(255) DEFAULT NULL             COMMENT '处理结果说明',
-    user_id        BIGINT       NOT NULL                 COMMENT '提交人ID，关联user.id',
-    handler_id     BIGINT       DEFAULT NULL             COMMENT '处理人ID，关联user.id',
-    created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
-    handle_time    DATETIME     DEFAULT NULL             COMMENT '受理时间',
-    complete_time  DATETIME     DEFAULT NULL             COMMENT '完成时间',
-    updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    is_deleted     TINYINT      NOT NULL DEFAULT 0       COMMENT '逻辑删除：0-未删除, 1-已删除',
+    id                     BIGINT       NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
+    order_no               VARCHAR(32)  NOT NULL                 COMMENT '工单编号，格式：R+年月日+6位序列',
+    repair_type            VARCHAR(32)  NOT NULL                 COMMENT '报修类型：电器/水暖/门窗/网络/其他',
+    campus                 VARCHAR(32)  DEFAULT NULL             COMMENT '校区',
+    building               VARCHAR(32)  DEFAULT NULL             COMMENT '楼栋',
+    room                   VARCHAR(32)  DEFAULT NULL             COMMENT '房间号',
+    description            TEXT         NOT NULL                 COMMENT '故障描述',
+    images                 VARCHAR(500) DEFAULT NULL             COMMENT '图片URL列表，JSON数组格式',
+    contact_person         VARCHAR(32)  DEFAULT NULL             COMMENT '联系人姓名',
+    contact_phone          VARCHAR(20)  DEFAULT NULL             COMMENT '联系电话',
+    status                 TINYINT      NOT NULL DEFAULT 0       COMMENT '状态：0-待处理, 1-处理中, 2-已完成, 3-已驳回',
+    reject_reason          VARCHAR(255) DEFAULT NULL             COMMENT '驳回原因',
+    handle_result          VARCHAR(255) DEFAULT NULL             COMMENT '处理结果说明',
+    user_id                BIGINT       NOT NULL                 COMMENT '提交人ID，关联user.id',
+    handler_id             BIGINT       DEFAULT NULL             COMMENT '处理人ID，关联user.id',
+    estimated_complete_time DATETIME    DEFAULT NULL             COMMENT '预计完成时间，用于逾期提醒判断',
+    created_at             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '提交时间',
+    handle_time            DATETIME     DEFAULT NULL             COMMENT '受理时间',
+    complete_time          DATETIME     DEFAULT NULL             COMMENT '完成时间',
+    updated_at             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    is_deleted             TINYINT      NOT NULL DEFAULT 0       COMMENT '逻辑删除：0-未删除, 1-已删除',
     PRIMARY KEY (id),
     UNIQUE KEY uk_order_no (order_no),
     INDEX idx_status (status),
@@ -125,7 +132,8 @@ CREATE TABLE IF NOT EXISTS repair_order (
     INDEX idx_created_at (created_at),
     INDEX idx_status_created (status, created_at),      -- 复合索引：按状态+时间排序查询
     INDEX idx_location (campus, building),              -- 复合索引：按地点查询
-    INDEX idx_handle_time (handle_time)
+    INDEX idx_handle_time (handle_time),
+    INDEX idx_estimated_complete (estimated_complete_time) -- 索引：逾期提醒查询
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='报修工单表';
 
 
@@ -171,6 +179,22 @@ CREATE TABLE IF NOT EXISTS operation_log (
 
 
 -- ============================================================
+-- 7. 系统配置表 (system_config)
+--    存储系统基础配置信息，如系统参数、开关配置等
+-- ============================================================
+CREATE TABLE IF NOT EXISTS system_config (
+    id           BIGINT       NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
+    config_key   VARCHAR(64)  NOT NULL                 COMMENT '配置键',
+    config_value VARCHAR(255)                          COMMENT '配置值',
+    description  VARCHAR(255) DEFAULT NULL             COMMENT '配置说明',
+    created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_config_key (config_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='系统配置表';
+
+
+-- ============================================================
 -- 索引方案总结
 -- ============================================================
 -- user表:
@@ -204,11 +228,16 @@ CREATE TABLE IF NOT EXISTS operation_log (
 --   - 普通索引: user_id, module, created_at
 --   - 复合索引: module+action (按模块+操作类型查询)
 --
+-- system_config表:
+--   - 主键: id
+--   - 唯一索引: config_key (配置键唯一查询)
+--
 -- ============================================================
 -- 外键关系说明（MyBatis-Plus不强制使用物理外键，通过逻辑关联）
 -- ============================================================
 -- user.id ← announcement.publisher_id
 -- user.id ← lost_found.user_id
+-- user.id ← lost_found.auditor_id
 -- user.id ← repair_order.user_id
 -- user.id ← repair_order.handler_id
 -- repair_order.id ← repair_log.order_id
