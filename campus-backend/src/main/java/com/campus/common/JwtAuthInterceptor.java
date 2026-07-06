@@ -16,7 +16,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
 
-    private static final String[] WHITELIST = {"/api/auth/", "/api/files/", "/error"};
+    private static final String[] WHITELIST = {"/api/auth/", "/api/file", "/error"};
 
     public JwtAuthInterceptor(JwtUtil jwtUtil, ObjectMapper objectMapper) {
         this.jwtUtil = jwtUtil;

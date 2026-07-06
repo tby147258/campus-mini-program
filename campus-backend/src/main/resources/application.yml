@@ -28,7 +28,7 @@ mybatis-plus:
 
 # JWT配置
 jwt:
-  secret: campus-service-jwt-secret-key-2026
+  secret: ab7f2f522096da54d08e5015b2cc17f2219954228f649fde3e911ad6be67f606
   expiration: 86400  # 24小时
 
 # 和风天气API

@@ -2,7 +2,9 @@ package com.campus.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
+import com.campus.common.UserContext;
 import com.campus.entity.RepairOrder;
 import com.campus.service.RepairOrderService;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ public class RepairOrderController {
     }
 
     @GetMapping
+    @RoleRequired(1)
     public Result<?> list(@RequestParam(defaultValue = "1") int page,
                           @RequestParam(defaultValue = "10") int size,
                           @RequestParam(required = false) Integer status) {
@@ -30,9 +33,10 @@ public class RepairOrderController {
     }
 
     @GetMapping("/my")
-    public Result<?> myOrders(@RequestParam Long userId,
-                              @RequestParam(defaultValue = "1") int page,
+    public Result<?> myOrders(@RequestParam(defaultValue = "1") int page,
                               @RequestParam(defaultValue = "10") int size) {
+        Long userId = UserContext.getUserId();
+        if (userId == null) return Result.error(401, "未登录");
         Page<RepairOrder> p = new Page<>(page, size);
         return Result.success(repairOrderService.lambdaQuery()
                 .eq(RepairOrder::getUserId, userId)
@@ -53,6 +57,7 @@ public class RepairOrderController {
     }
 
     @PutMapping("/{id}/status")
+    @RoleRequired(1)
     public Result<?> updateStatus(@PathVariable Long id, @RequestBody RepairOrder update) {
         RepairOrder order = repairOrderService.getById(id);
         if (order == null) return Result.error(404, "工单不存在");

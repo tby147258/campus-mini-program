@@ -2,6 +2,7 @@ package com.campus.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
 import com.campus.entity.Announcement;
 import com.campus.service.AnnouncementService;
@@ -34,6 +35,7 @@ public class AnnouncementController {
     }
 
     @PostMapping
+    @RoleRequired(1)
     public Result<?> create(@RequestBody Announcement announcement) {
         announcement.setStatus(1);
         announcementService.save(announcement);
@@ -41,6 +43,7 @@ public class AnnouncementController {
     }
 
     @PutMapping("/{id}")
+    @RoleRequired(1)
     public Result<?> update(@PathVariable Long id, @RequestBody Announcement announcement) {
         announcement.setId(id);
         announcementService.updateById(announcement);
@@ -48,6 +51,7 @@ public class AnnouncementController {
     }
 
     @DeleteMapping("/{id}")
+    @RoleRequired(1)
     public Result<?> delete(@PathVariable Long id) {
         announcementService.removeById(id);
         return Result.success(null);

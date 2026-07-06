@@ -1,6 +1,7 @@
 package com.campus.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
 import com.campus.entity.LostFound;
 import com.campus.service.LostFoundService;
@@ -33,6 +34,7 @@ public class LostFoundController {
     }
 
     @PostMapping
+    @RoleRequired(1)
     public Result<?> create(@RequestBody LostFound lostFound) {
         lostFound.setStatus(0); // 待审核
         lostFoundService.save(lostFound);
@@ -40,6 +42,7 @@ public class LostFoundController {
     }
 
     @PutMapping("/{id}")
+    @RoleRequired(1)
     public Result<?> update(@PathVariable Long id, @RequestBody LostFound lostFound) {
         lostFound.setId(id);
         lostFoundService.updateById(lostFound);
@@ -47,12 +50,14 @@ public class LostFoundController {
     }
 
     @DeleteMapping("/{id}")
+    @RoleRequired(1)
     public Result<?> delete(@PathVariable Long id) {
         lostFoundService.removeById(id);
         return Result.success(null);
     }
 
     @PutMapping("/{id}/audit")
+    @RoleRequired(1)
     public Result<?> audit(@PathVariable Long id, @RequestBody LostFound lostFound) {
         lostFoundService.lambdaUpdate()
                 .eq(LostFound::getId, id)
