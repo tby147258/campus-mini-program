@@ -1,5 +1,58 @@
 # 校园综合服务平台 - 开发规范
 
+## 0. 项目上下文（重要：Claude Code优先读取此文件）
+
+### 0.1 项目目录结构
+```
+c:\Users\24361\Desktop\实训\
+├── .clinerules              # 本文件——开发规范（Claude Code自动加载）
+├── .claudeignore            # Claude Code忽略规则（排除docx/pdf大文件）
+├── .gitignore               # Git忽略规则
+├── README.md                # 项目总览
+├── campus-backend/          # SpringBoot后端
+│   └── src/main/java/com/campus/
+│       ├── CampusApplication.java
+│       ├── common/          # Result, JwtUtil, BusinessException, MetaObjectHandler
+│       ├── config/          # JwtConfig, MybatisPlusConfig, WebMvcConfig
+│       ├── controller/      # AuthController, AnnouncementController, LostFoundController, RepairOrderController, FileController, WeatherController
+│       ├── entity/          # User, Announcement, LostFound, RepairOrder, RepairLog, SystemConfig
+│       ├── mapper/          # UserMapper, AnnouncementMapper, LostFoundMapper, RepairOrderMapper, SystemConfigMapper
+│       └── service/         # UserService, AnnouncementService, LostFoundService, RepairOrderService
+├── campus-admin/            # Vue3管理后台
+│   └── src/
+│       ├── api/index.js     # 统一API封装
+│       ├── router/index.js  # 路由配置
+│       └── views/           # Login, Layout, Dashboard, AnnouncementList, AnnouncementForm, LostFoundManage, RepairManage, UserManage, Statistics, Settings
+├── campus-miniapp/          # 微信小程序
+│   └── pages/               # index(首页), lostfound, repair, profile
+└── docs/database/           # 数据库设计（SQL脚本可读，docx文件被.claudeignore排除）
+    ├── schema.sql           # 7张表建表脚本
+    ├── test_data.sql        # 测试数据
+    ├── data_dictionary.md   # 数据字典
+    └── er_diagram.svg       # E-R图
+```
+
+### 0.2 数据库核心信息（7张表）
+- **user**：12字段 — id, open_id(UK), password(BCrypt), nickname, avatar, student_no, phone, role(0学生/1管理员), status(0正常/1禁用), created_at, updated_at, is_deleted
+- **announcement**：10字段 — id, title, content, category, publisher_id(FK→user), view_count, status(0草稿/1已发布), created_at, updated_at, is_deleted
+- **lost_found**：17字段 — id, type(0失物/1寻物), item_name, category, images, description, location, contact_person, contact_phone, status(0待审核/1已发布/2未通过/3已结束), user_id(FK), auditor_id(FK), audit_time, reject_reason, created_at, updated_at, is_deleted
+- **repair_order**：21字段 — id, order_no(UK,R+日期+序列), repair_type, campus, building, room, description, images, contact_person, contact_phone, status(0待处理/1处理中/2已完成/3已驳回), reject_reason, handle_result, user_id(FK), handler_id(FK), estimated_complete_time, created_at, handle_time, complete_time, updated_at, is_deleted
+- **repair_log**：8字段 — id, order_id(FK→repair_order), operator_id(FK→user), action, from_status, to_status, remark, created_at
+- **operation_log**：8字段 — id, user_id(FK), module, action, target_id, description, ip_address, created_at
+- **system_config**：6字段 — id, config_key(UK), config_value, description, created_at, updated_at
+
+### 0.3 关键依赖版本
+- SpringBoot 3.2.0, MyBatis-Plus 3.5.5, MySQL 8.0.39, JJWT 0.12.3
+- Vue 3.4, Element Plus 2.5, Pinia 2.1, Vite 5.0, Axios 1.6
+- Lombok, spring-security-crypto (BCrypt), springdoc-openapi 2.3
+
+### 0.4 项目配置要点
+- 数据库：localhost:3306/campus, user=root, password=root
+- JWT密钥：campus-service-jwt-secret-key-2026, 过期时间86400秒(24h)
+- 后端端口：8080
+- 前端端口：5173（Vite默认）
+- 跨域：已配置WebMvcConfig允许所有origin
+
 ## 1. 项目概述
 - 项目名称：校园综合服务平台
 - 架构：前后端分离，RESTful API

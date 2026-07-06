@@ -1,0 +1,35 @@
+# ============================================================
+# Claude Code 忽略规则
+# 排除大体积二进制文档，避免Claude Code扫描时超时崩溃
+# ============================================================
+
+# 所有Word/PDF文档（项目参考模板和已生成的设计文档）
+docs/*.docx
+docs/*.doc
+docs/*.pdf
+
+# 数据库设计文档（仅保留SQL脚本供Claude Code读取）
+docs/database/数据库设计说明书.docx
+
+# node_modules（前端依赖）
+campus-admin/node_modules/
+campus-miniapp/node_modules/
+
+# 构建产物
+campus-admin/dist/
+campus-backend/target/
+
+# IDE配置
+.idea/
+.vscode/
+*.iml
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+
+# 上传文件
+uploads/
