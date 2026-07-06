@@ -1,0 +1,90 @@
+# 校园综合服务平台 - 开发规范
+
+## 1. 项目概述
+- 项目名称：校园综合服务平台
+- 架构：前后端分离，RESTful API
+- 前端二：Vue3管理后台 + 微信小程序
+- 后端：SpringBoot 3.2 + MyBatis-Plus 3.5.5 + MySQL 8.0 + JWT
+- 管理后台：Vue 3 + Element Plus + Pinia + Vite
+- 小程序：微信小程序原生框架
+- 开发工具：VSCode + Claude Code + DeepSeek
+
+## 2. MVC分层架构（后端SpringBoot）
+
+### 2.1 Controller层
+- 统一使用@RestController注解
+- 遵循RESTful风格，路径使用复数名词
+- 统一返回Result<T>封装
+- 参数校验使用@Valid注解
+- 接口路径格式：/api/{module}/...
+- 方法命名：list/page/get/create/update/delete/audit
+
+### 2.2 Service层
+- 接口+实现类分离（IUserService + UserServiceImpl）
+- 事务注解：@Transactional(rollbackFor = Exception.class)
+- 业务逻辑写在Service层，Controller不写业务逻辑
+- 方法命名：getById/save/update/remove/page/list
+
+### 2.3 Mapper层
+- 继承MyBatis-Plus的BaseMapper
+- 复杂查询使用@Select或XML
+- 分页使用MyBatis-Plus的Page对象
+
+### 2.4 Entity层
+- 统一使用@TableName注解
+- 主键策略：@TableId(type = IdType.AUTO)
+- 逻辑删除：@TableLogic
+- 审计字段：created_at, updated_at（自动填充）
+- 统一使用is_deleted逻辑删除
+
+## 3. 数据库规范
+- 表名：小写字母+下划线
+- 字段名：小写字母+下划线
+- 主键统一命名为id
+- 外键以关联表名_id结尾
+- 所有表含created_at, updated_at
+- 核心业务表含is_deleted
+- 所有字段加COMMENT注释
+- 字符集：utf8mb4，排序规则：utf8mb4_general_ci
+- 引擎：InnoDB
+
+## 4. 后端代码规范
+- 包结构：com.campus.{controller/service/mapper/entity/config/common}
+- 统一异常处理：全局@RestControllerAdvice
+- 跨域配置：统一WebMvcConfig
+- JWT认证：JwtUtil工具类，拦截器统一校验
+- 密码加密：BCrypt
+- 日志：使用Slf4j
+
+## 5. Vue3管理后台规范
+- 状态管理：Pinia
+- UI组件库：Element Plus
+- 路由：Vue Router，懒加载
+- API调用统一封装在src/api/目录
+- 页面组件放在src/views/目录
+- 命名：多单词驼峰，如UserManage.vue
+
+## 6. 微信小程序规范
+- 4个Tab页：首页/失物招领/报修中心/个人中心
+- 页面放在pages/目录下
+- WXML使用flex布局
+- 请求封装统一方法
+- 使用wx.request调用后端API
+
+## 7. API设计规范
+- 统一前缀：/api/
+- 认证接口：/api/auth/**
+- 公告接口：/api/announcements/**
+- 失物招领：/api/lost-found/**
+- 报修工单：/api/repair-orders/**
+- 文件上传：/api/files/**
+- 天气查询：/api/weather/**
+- 分页参数：page, size
+- 响应格式：{code, message, data}
+
+## 8. 通用约定
+- 代码必须有中文注释
+- 实体类字段加@ApiModelProperty或注释
+- 敏感信息（密码等）不返回前端
+- 文件上传限制大小和类型
+- 使用逻辑删除，不使用物理删除
