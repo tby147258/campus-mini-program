@@ -43,4 +43,28 @@ export const repairApi = {
   updateStatus: (id, data) => request.put(`/repair-orders/${id}/status`, data)
 }
 
+export const userApi = {
+  page: (params) => request.get('/users/page', { params }),
+  getById: (id) => request.get(`/users/${id}`),
+  create: (data) => request.post('/users', data),
+  update: (id, data) => request.put(`/users/${id}`, data),
+  updateStatus: (id, status) => request.put(`/users/${id}/status`, { status }),
+  resetPassword: (id) => request.put(`/users/${id}/password`),
+  changePassword: (id, data) => request.put(`/users/${id}/change-password`, data),
+  delete: (id) => request.delete(`/users/${id}`)
+}
+
+export const configApi = {
+  list: () => request.get('/system-config'),
+  getByKey: (key) => request.get(`/system-config/${key}`),
+  create: (data) => request.post('/system-config', data),
+  update: (id, data) => request.put(`/system-config/${id}`, data),
+  updateByKey: (key, data) => request.put(`/system-config/key/${key}`, data),
+  delete: (id) => request.delete(`/system-config/${id}`)
+}
+
+export const logApi = {
+  page: (params) => request.get('/operation-logs', { params })
+}
+
 export default request

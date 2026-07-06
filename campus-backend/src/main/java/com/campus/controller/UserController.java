@@ -196,6 +196,23 @@ public class UserController {
     }
 
     /**
+     * 修改密码 - 用户指定新密码
+     */
+    @PutMapping("/{id}/change-password")
+    public Result<?> changePassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String newPassword = body.get("password");
+        if (newPassword == null || newPassword.length() < 6) {
+            return Result.error(400, "密码至少6位");
+        }
+        String encoded = passwordEncoder.encode(newPassword);
+        userService.lambdaUpdate()
+                .eq(User::getId, id)
+                .set(User::getPassword, encoded)
+                .update();
+        return Result.success("密码修改成功");
+    }
+
+    /**
      * 删除用户（逻辑删除）
      */
     @DeleteMapping("/{id}")

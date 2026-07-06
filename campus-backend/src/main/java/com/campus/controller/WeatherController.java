@@ -19,7 +19,7 @@ public class WeatherController {
     public Result<?> getNowWeather(@RequestParam String location) {
         String url = "https://devapi.qweather.com/v7/weather/now?location=" + location + "&key=" + apiKey;
         try {
-            Map result = restTemplate.getForObject(url, Map.class);
+            Map<?, ?> result = restTemplate.getForObject(url, Map.class);
             return Result.success(result);
         } catch (Exception e) {
             return Result.error(500, "天气查询失败");

@@ -27,7 +27,7 @@ import { ElMessage } from 'element-plus'
 const router = useRouter()
 const formRef = ref()
 const loading = ref(false)
-const form = reactive({ username: 'admin', password: 'admin123' })
+const form = reactive({ username: '', password: '' })
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
@@ -40,9 +40,10 @@ const handleLogin = async () => {
   try {
     const res = await authApi.login(form)
     localStorage.setItem('token', res.data.token)
+    localStorage.setItem('user', JSON.stringify(res.data.user))
     router.push('/dashboard')
-  } catch {
-    ElMessage.error('登录失败')
+  } catch (err) {
+    ElMessage.error(err.response?.data?.msg || '登录失败，请检查用户名和密码')
   } finally {
     loading.value = false
   }

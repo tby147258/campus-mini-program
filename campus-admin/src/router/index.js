@@ -14,6 +14,7 @@ const routes = [
       { path: 'lost-found', name: 'LostFound', component: () => import('../views/LostFoundManage.vue'), meta: { title: '失物招领管理' } },
       { path: 'repairs', name: 'Repairs', component: () => import('../views/RepairManage.vue'), meta: { title: '报修工单管理' } },
       { path: 'users', name: 'Users', component: () => import('../views/UserManage.vue'), meta: { title: '用户管理' } },
+      { path: 'operation-logs', name: 'OperationLogs', component: () => import('../views/OperationLog.vue'), meta: { title: '操作日志' } },
       { path: 'statistics', name: 'Statistics', component: () => import('../views/Statistics.vue'), meta: { title: '数据统计' } },
       { path: 'settings', name: 'Settings', component: () => import('../views/Settings.vue'), meta: { title: '系统设置' } },
     ]
