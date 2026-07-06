@@ -1,0 +1,39 @@
+<view class="container">
+  <view class="card">
+    <view class="section-title">发布信息</view>
+
+    <view class="form-item">
+      <text class="form-label">类型</text>
+      <picker mode="selector" range="{{types}}" bindchange="onTypeChange">
+        <view class="picker-value">{{form.typeName || '请选择类型'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">物品名称</text>
+      <input class="form-input" placeholder="请输入物品名称" value="{{form.itemName}}" bindinput="onFieldChange" data-field="itemName" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">地点</text>
+      <input class="form-input" placeholder="请输入丢失/拾获地点" value="{{form.location}}" bindinput="onFieldChange" data-field="location" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">详细描述</text>
+      <textarea class="form-textarea" placeholder="请详细描述物品特征" value="{{form.description}}" bindinput="onFieldChange" data-field="description" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">联系人</text>
+      <input class="form-input" placeholder="请输入联系人姓名" value="{{form.contactPerson}}" bindinput="onFieldChange" data-field="contactPerson" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">联系电话</text>
+      <input class="form-input" placeholder="请输入手机号" value="{{form.contactPhone}}" bindinput="onFieldChange" data-field="contactPhone" />
+    </view>
+
+    <button class="submit-btn" bindtap="submitPublish" loading="{{submitting}}">提交发布</button>
+  </view>
+</view>

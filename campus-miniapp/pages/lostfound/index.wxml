@@ -33,11 +33,11 @@
         </view>
         <view class="info-row">
           <text class="info-label">时间</text>
-          <text class="info-value">{{item.time}}</text>
+          <text class="info-value">{{item.createdAt}}</text>
         </view>
-        <view class="info-row" wx:if="{{item.contact}}">
-          <text class="info-label">联系方式</text>
-          <text class="info-value">{{item.contact}}</text>
+        <view class="info-row" wx:if="{{item.contactPerson}}">
+          <text class="info-label">联系人</text>
+          <text class="info-value">{{item.contactPerson}}</text>
         </view>
       </view>
     </view>

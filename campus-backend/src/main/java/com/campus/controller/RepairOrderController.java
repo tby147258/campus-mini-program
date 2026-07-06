@@ -9,10 +9,12 @@ import com.campus.entity.RepairOrder;
 import com.campus.service.RepairOrderService;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @RestController
-@RequestMapping("/api/repair-orders")
+@RequestMapping("/api/repair")
 public class RepairOrderController {
     private final RepairOrderService repairOrderService;
 
@@ -32,7 +34,7 @@ public class RepairOrderController {
         return Result.success(repairOrderService.page(p, q));
     }
 
-    @GetMapping("/my")
+    @GetMapping("/my-orders")
     public Result<?> myOrders(@RequestParam(defaultValue = "1") int page,
                               @RequestParam(defaultValue = "10") int size) {
         Long userId = UserContext.getUserId();
@@ -51,7 +53,14 @@ public class RepairOrderController {
 
     @PostMapping
     public Result<?> create(@RequestBody RepairOrder repairOrder) {
+        Long userId = UserContext.getUserId();
+        if (userId == null) return Result.error(401, "未登录");
+        repairOrder.setUserId(userId);
         repairOrder.setStatus(0); // 待处理
+        // 生成工单编号 R + yyyyMMdd + 6位随机数
+        String date = DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now());
+        long random = (long) (Math.random() * 1000000);
+        repairOrder.setOrderNo(String.format("R%s%06d", date, random));
         repairOrderService.save(repairOrder);
         return Result.success(null);
     }

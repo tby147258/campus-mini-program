@@ -38,44 +38,43 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 提取 Bearer token
+        // 提取 Bearer token（可选）
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            writeJson(response, 401, "未登录或Token格式错误");
-            return false;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                var claims = jwtUtil.parseToken(token);
+                Long userId = Long.parseLong(claims.getSubject());
+                Integer role = (Integer) claims.get("role");
+
+                request.setAttribute("userId", userId);
+                request.setAttribute("role", role);
+
+                // 设置 ThreadLocal 用户上下文
+                UserContext.set(userId, role);
+            } catch (Exception e) {
+                writeJson(response, 401, "Token无效或已过期");
+                return false;
+            }
         }
 
-        String token = authHeader.substring(7);
-
-        try {
-            var claims = jwtUtil.parseToken(token);
-            Long userId = Long.parseLong(claims.getSubject());
-            Integer role = (Integer) claims.get("role");
-
-            request.setAttribute("userId", userId);
-            request.setAttribute("role", role);
-
-            // 设置 ThreadLocal 用户上下文
-            UserContext.set(userId, role);
-
-            // 检查角色注解
-            if (handler instanceof HandlerMethod hm) {
-                RoleRequired roleRequired = hm.getMethodAnnotation(RoleRequired.class);
-                if (roleRequired == null) {
-                    roleRequired = hm.getBeanType().getAnnotation(RoleRequired.class);
+        // 检查角色注解（仅当 @RoleRequired 存在时拒绝未登录/权限不足）
+        if (handler instanceof HandlerMethod hm) {
+            RoleRequired roleRequired = hm.getMethodAnnotation(RoleRequired.class);
+            if (roleRequired != null) {
+                Integer role = (Integer) request.getAttribute("role");
+                if (role == null) {
+                    writeJson(response, 401, "未登录，请先登录");
+                    return false;
                 }
-                if (roleRequired != null && role != null && role.intValue() != roleRequired.value()) {
+                if (role.intValue() != roleRequired.value()) {
                     writeJson(response, 403, "无权访问，权限不足");
                     return false;
                 }
             }
-
-            return true;
-
-        } catch (Exception e) {
-            writeJson(response, 401, "Token无效或已过期");
-            return false;
         }
+
+        return true;
     }
 
     private void writeJson(HttpServletResponse response, int code, String msg) throws Exception {

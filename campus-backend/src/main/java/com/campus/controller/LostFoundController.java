@@ -3,6 +3,7 @@ package com.campus.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
+import com.campus.common.UserContext;
 import com.campus.entity.LostFound;
 import com.campus.service.LostFoundService;
 import org.springframework.web.bind.annotation.*;
@@ -34,8 +35,10 @@ public class LostFoundController {
     }
 
     @PostMapping
-    @RoleRequired(1)
     public Result<?> create(@RequestBody LostFound lostFound) {
+        Long userId = UserContext.getUserId();
+        if (userId == null) return Result.error(401, "未登录");
+        lostFound.setUserId(userId);
         lostFound.setStatus(0); // 待审核
         lostFoundService.save(lostFound);
         return Result.success(null);

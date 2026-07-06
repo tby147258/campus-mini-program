@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/lostfound/index",
+    "pages/lostfound/publish",
     "pages/repair/index",
     "pages/profile/index"
   ],

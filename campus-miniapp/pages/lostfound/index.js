@@ -10,6 +10,10 @@ Page({
     this.loadList()
   },
 
+  onShow() {
+    this.loadList()
+  },
+
   loadList() {
     const app = getApp()
     wx.request({
