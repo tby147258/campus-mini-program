@@ -95,6 +95,22 @@
         </dependency>
     </dependencies>
 
+    <!-- 阿里云 Maven 镜像加速 -->
+    <repositories>
+        <repository>
+            <id>aliyun-central</id>
+            <name>阿里云 Central</name>
+            <url>https://maven.aliyun.com/repository/central</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>aliyun-plugin</id>
+            <name>阿里云 Plugin</name>
+            <url>https://maven.aliyun.com/repository/central</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <build>
         <plugins>
             <plugin>
