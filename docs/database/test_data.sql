@@ -19,12 +19,12 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ============================================================
 -- 1. 用户数据 (5条)
 -- ============================================================
-INSERT INTO user (open_id, nickname, avatar, student_no, phone, role, status, password) VALUES
-('o_openid_admin_001', '系统管理员', 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin', 'A001', '13800000001', 1, 0, '$2b$12$hjKc6S4VeTWtFO78mrcN1OqMBdGb4MJW708i5EDJreG1bhWnW8DYC'),
-('o_openid_stu_001', '张三丰', 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhang', '2024001', '13800000002', 0, 0, NULL),
-('o_openid_stu_002', '李思思', 'https://api.dicebear.com/7.x/avataaars/svg?seed=li', '2024002', '13800000003', 0, 0, NULL),
-('o_openid_stu_003', '王小明', 'https://api.dicebear.com/7.x/avataaars/svg?seed=wang', '2024003', '13800000004', 0, 0, NULL),
-('o_openid_stu_004', '赵丽颖', 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhao', '2024004', '13800000005', 0, 0, NULL);
+INSERT INTO user (open_id, email, nickname, avatar, student_no, phone, role, status, password) VALUES
+('o_openid_admin_001', 'admin@campus.com', '系统管理员', 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin', 'A001', '13800000001', 1, 0, '$2b$12$hjKc6S4VeTWtFO78mrcN1OqMBdGb4MJW708i5EDJreG1bhWnW8DYC'),
+('o_openid_stu_001', 'zhang@campus.com', '张三丰', 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhang', '2024001', '13800000002', 0, 0, NULL),
+('o_openid_stu_002', 'li@campus.com', '李思思', 'https://api.dicebear.com/7.x/avataaars/svg?seed=li', '2024002', '13800000003', 0, 0, NULL),
+('o_openid_stu_003', 'wang@campus.com', '王小明', 'https://api.dicebear.com/7.x/avataaars/svg?seed=wang', '2024003', '13800000004', 0, 0, NULL),
+('o_openid_stu_004', 'zhao@campus.com', '赵丽颖', 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhao', '2024004', '13800000005', 0, 0, NULL);
 
 
 -- ============================================================

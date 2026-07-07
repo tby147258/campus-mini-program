@@ -10,6 +10,7 @@ public class User {
     @TableId(type = IdType.AUTO)
     private Long id;
     private String openId;
+    private String email;
     @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;    // BCrypt加密，仅管理员使用
     private String nickname;

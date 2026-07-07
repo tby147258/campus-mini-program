@@ -18,8 +18,19 @@ request.interceptors.response.use(
   err => Promise.reject(err)
 )
 
+// 验证码 API
+export const captchaApi = {
+  get: () => request.get('/captcha'),
+  verify: (token, position) => request.post('/captcha/verify', { token, position })
+}
+
+// 认证 API
 export const authApi = {
-  login: (data) => request.post('/auth/admin-login', data)
+  login: (data) => request.post('/auth/admin-login', data),
+  register: (data) => request.post('/auth/register', data),
+  forgotPassword: (email) => request.post('/auth/forgot-password', null, { params: { email } }),
+  resetPassword: (data) => request.post('/auth/reset-password', data),
+  me: () => request.get('/auth/me')
 }
 
 export const announcementApi = {

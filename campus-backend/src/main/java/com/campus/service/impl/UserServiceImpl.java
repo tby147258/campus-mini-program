@@ -4,10 +4,19 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.campus.entity.User;
 import com.campus.mapper.UserMapper;
 import com.campus.service.UserService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import java.io.Serializable;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    @Override
+    @Cacheable(value = "user", key = "#id")
+    public User getById(Serializable id) {
+        return super.getById(id);
+    }
 
     @Override
     public User loginOrRegister(String code) {

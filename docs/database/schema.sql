@@ -20,6 +20,7 @@ USE campus;
 CREATE TABLE IF NOT EXISTS user (
     id          BIGINT       NOT NULL AUTO_INCREMENT  COMMENT '主键ID',
     open_id     VARCHAR(64)  NOT NULL                 COMMENT '微信OpenID',
+    email       VARCHAR(128) DEFAULT NULL             COMMENT '邮箱',
     password    VARCHAR(255) DEFAULT NULL             COMMENT '密码(BCrypt加密)，仅管理员使用',
     nickname    VARCHAR(64)  DEFAULT NULL             COMMENT '微信昵称',
     avatar      VARCHAR(255) DEFAULT NULL             COMMENT '头像URL',
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS user (
     is_deleted  TINYINT      NOT NULL DEFAULT 0       COMMENT '逻辑删除：0-未删除, 1-已删除',
     PRIMARY KEY (id),
     UNIQUE KEY uk_open_id (open_id),
+    UNIQUE KEY uk_email (email),
     INDEX idx_role (role),
     INDEX idx_status (status),
     INDEX idx_student_no (student_no),
