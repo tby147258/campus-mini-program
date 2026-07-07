@@ -47,7 +47,7 @@ goto fail
 
 :execute
 @rem Setup the command line
-set CLASSPATH=%APP_HOME%.mvn\wrapper\maven-wrapper.jar
+set CLASSPATH=%APP_HOME%\.mvn\wrapper\maven-wrapper.jar
 
 @rem Download Maven if wrapper jar doesn't exist
 if not exist "%CLASSPATH%" (
