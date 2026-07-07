@@ -18,7 +18,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                // JK6: allowCredentials(true) 时禁止通配 Origin，限定可信源
+                .allowedOriginPatterns("http://localhost:*", "https://localhost:*",
+                        "http://127.0.0.1:*", "https://127.0.0.1:*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowCredentials(true)
                 .maxAge(3600);
@@ -27,7 +29,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtAuthInterceptor)
-                .addPathPatterns("/**")
-                .excludePathPatterns("/api/weather/**");
+                .addPathPatterns("/**");
+        // JK4: /api/weather/** 已使用 @NoAuth 注解，不再需要 excludePathPatterns
+        //      统一使用 @NoAuth 作为业务公开接口标记方式
     }
 }

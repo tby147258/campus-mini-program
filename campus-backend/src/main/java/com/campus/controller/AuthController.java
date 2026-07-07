@@ -1,10 +1,13 @@
 package com.campus.controller;
 
+import com.campus.annotation.NoAuth;
 import com.campus.common.JwtUtil;
 import com.campus.common.Result;
 import com.campus.common.UserContext;
 import com.campus.entity.OperationLog;
 import com.campus.entity.User;
+import com.campus.enums.UserRole;
+import com.campus.enums.UserStatus;
 import com.campus.service.CaptchaService;
 import com.campus.service.OperationLogService;
 import com.campus.service.UserService;
@@ -12,13 +15,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,12 +36,13 @@ public class AuthController {
     private final StringRedisTemplate redisTemplate;
 
     public AuthController(UserService userService, JwtUtil jwtUtil,
+                          BCryptPasswordEncoder passwordEncoder,
                           OperationLogService operationLogService,
                           CaptchaService captchaService,
                           StringRedisTemplate redisTemplate) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoder = passwordEncoder;
         this.operationLogService = operationLogService;
         this.captchaService = captchaService;
         this.redisTemplate = redisTemplate;
@@ -47,6 +52,7 @@ public class AuthController {
      * 微信小程序登录（模拟）
      */
     @PostMapping("/wx-login")
+    @NoAuth
     public Result<?> wxLogin(@RequestBody Map<String, String> params) {
         String code = params.get("code");
         User user = userService.loginOrRegister(code);
@@ -59,6 +65,7 @@ public class AuthController {
      * 管理员登录（含滑块验证码校验）
      */
     @PostMapping("/admin-login")
+    @NoAuth
     public Result<?> adminLogin(@Valid @RequestBody AdminLoginRequest request,
                                 HttpServletRequest httpRequest) {
         // 0. 校验滑块验证码 passToken（Redis 中验证）
@@ -73,7 +80,7 @@ public class AuthController {
         redisTemplate.delete(passKey); // 一次性使用
         User user = userService.lambdaQuery()
                 .eq(User::getNickname, request.getUsername())
-                .eq(User::getRole, 1)
+                .eq(User::getRole, UserRole.ADMIN)
                 .one();
 
         if (user == null) {
@@ -86,7 +93,7 @@ public class AuthController {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             return Result.error(401, "密码错误");
         }
-        if (user.getStatus() != 0) {
+        if (user.getStatus() != UserStatus.NORMAL) {
             return Result.error(403, "账号已被禁用");
         }
 
@@ -110,6 +117,7 @@ public class AuthController {
      * 用户注册（学生端）
      */
     @PostMapping("/register")
+    @NoAuth
     public Result<?> register(@Valid @RequestBody RegisterRequest request) {
         // 校验邮箱唯一性
         User exist = userService.lambdaQuery().eq(User::getEmail, request.getEmail()).one();
@@ -117,8 +125,8 @@ public class AuthController {
             return Result.error(400, "该邮箱已被注册");
         }
 
-        // 生成随机 openId（注册场景无需微信）
-        String openId = "reg_" + System.currentTimeMillis();
+        // 生成唯一 openId（D12：使用 UUID 避免高并发重复）
+        String openId = "reg_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
 
         User user = new User();
         user.setOpenId(openId);
@@ -127,8 +135,8 @@ public class AuthController {
         user.setPhone(request.getPhone());
         user.setStudentNo(request.getStudentNo());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(0); // 默认为学生
-        user.setStatus(0);
+        user.setRole(UserRole.STUDENT); // 默认为学生
+        user.setStatus(UserStatus.NORMAL);
         userService.save(user);
 
         String token = jwtUtil.generateToken(user.getId(), user.getRole());
@@ -140,12 +148,21 @@ public class AuthController {
      * 发送重置密码验证码到邮箱
      */
     @PostMapping("/forgot-password")
+    @NoAuth
     public Result<?> forgotPassword(@RequestParam String email) {
         User user = userService.lambdaQuery().eq(User::getEmail, email).one();
         if (user == null) {
             return Result.error(404, "该邮箱未注册");
         }
-        captchaService.sendEmailCode(email);
+        // D7: 速率限制 — 同一邮箱 60 秒内仅允许发送 1 次
+        String rateKey = "rate:forgot_pwd:" + email;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(rateKey))) {
+            return Result.error(429, "请求过于频繁，请 60 秒后再试");
+        }
+        redisTemplate.opsForValue().set(rateKey, "1", 60, TimeUnit.SECONDS);
+
+        // D8: 传入场景标识
+        captchaService.sendEmailCode(email, "forgot-password");
         return Result.success(null);
     }
 
@@ -153,8 +170,10 @@ public class AuthController {
      * 重置密码
      */
     @PostMapping("/reset-password")
+    @NoAuth
     public Result<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        boolean ok = captchaService.verifyEmailCode(request.getEmail(), request.getCode());
+        // D8: 验证码校验传入场景标识
+        boolean ok = captchaService.verifyEmailCode(request.getEmail(), "forgot-password", request.getCode());
         if (!ok) {
             return Result.error(400, "验证码错误或已过期");
         }

@@ -7,6 +7,8 @@ import com.campus.common.Result;
 import com.campus.common.UserContext;
 import com.campus.dto.CreateUserRequest;
 import com.campus.entity.User;
+import com.campus.enums.UserRole;
+import com.campus.enums.UserStatus;
 import com.campus.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,9 +27,9 @@ public class UserController {
     private final UserService userService;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, BCryptPasswordEncoder passwordEncoder) {
         this.userService = userService;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -41,8 +43,8 @@ public class UserController {
                           @RequestParam(required = false) String keyword) {
         Page<User> p = new Page<>(page, size);
         LambdaQueryWrapper<User> q = new LambdaQueryWrapper<>();
-        q.eq(role != null, User::getRole, role)
-         .eq(status != null, User::getStatus, status)
+        q.eq(role != null, User::getRole, role != null ? UserRole.fromCode(role) : null)
+         .eq(status != null, User::getStatus, status != null ? UserStatus.fromCode(status) : null)
          .and(keyword != null && !keyword.isBlank(), w -> w
                  .like(User::getNickname, keyword)
                  .or()
@@ -91,8 +93,8 @@ public class UserController {
         user.setNickname(req.getNickname());
         user.setStudentNo(req.getStudentNo());
         user.setPhone(req.getPhone());
-        user.setRole(req.getRole());
-        user.setStatus(0); // 默认启用
+        user.setRole(UserRole.fromCode(req.getRole()));
+        user.setStatus(UserStatus.NORMAL); // 默认启用
 
         userService.save(user);
 
@@ -147,8 +149,9 @@ public class UserController {
      */
     @PutMapping("/{id}/status")
     public Result<?> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
-        Integer status = body.get("status");
-        if (status == null || (status != 0 && status != 1)) {
+        Integer statusCode = body.get("status");
+        UserStatus status = UserStatus.fromCode(statusCode);
+        if (status == null) {
             return Result.error(400, "状态值无效，应为0(启用)或1(禁用)");
         }
 
@@ -164,9 +167,9 @@ public class UserController {
 
         Long operatorId = UserContext.getUserId();
         System.out.printf("[USER_STATUS] operator=%d, target=%d, status=%d%n",
-                operatorId, id, status);
+                operatorId, id, status.getCode());
 
-        return Result.success(Map.of("id", id, "status", status));
+        return Result.success(Map.of("id", id, "status", status.getCode()));
     }
 
     /**

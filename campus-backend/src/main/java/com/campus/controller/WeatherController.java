@@ -1,5 +1,6 @@
 package com.campus.controller;
 
+import com.campus.annotation.NoAuth;
 import com.campus.common.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ public class WeatherController {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @GetMapping("/now")
+    @NoAuth
     public Result<?> getNowWeather(@RequestParam String location) {
         String url = "https://devapi.qweather.com/v7/weather/now?location=" + location + "&key=" + apiKey;
         try {

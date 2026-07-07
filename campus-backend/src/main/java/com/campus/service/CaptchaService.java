@@ -118,23 +118,31 @@ public class CaptchaService {
 
     /**
      * 发送验证码到邮箱（模拟：打印到控制台）
+     *
+     * @param email 目标邮箱
+     * @param scene 场景标识，如 "forgot-password"、"register"
      */
-    public void sendEmailCode(String email) {
+    public void sendEmailCode(String email, String scene) {
         String code = String.format("%06d", random.nextInt(1000000));
-        String key = "email_code:" + email;
+        String key = "email_code:" + scene + ":" + email;
         redisTemplate.opsForValue().set(key, code, 5, TimeUnit.MINUTES);
         System.out.println("========================================");
         System.out.println("[模拟邮件] 发送到: " + email);
         System.out.println("[模拟邮件] 验证码: " + code);
+        System.out.println("[模拟邮件] 场景: " + scene);
         System.out.println("[模拟邮件] 有效期: 5分钟");
         System.out.println("========================================");
     }
 
     /**
      * 验证邮箱验证码
+     *
+     * @param email 目标邮箱
+     * @param scene 场景标识，需与发送时一致
+     * @param code  用户输入的验证码
      */
-    public boolean verifyEmailCode(String email, String code) {
-        String key = "email_code:" + email;
+    public boolean verifyEmailCode(String email, String scene, String code) {
+        String key = "email_code:" + scene + ":" + email;
         String stored = redisTemplate.opsForValue().get(key);
         if (stored != null && stored.equals(code)) {
             redisTemplate.delete(key);

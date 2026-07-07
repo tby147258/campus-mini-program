@@ -6,12 +6,9 @@ import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
 import com.campus.common.UserContext;
 import com.campus.entity.RepairOrder;
+import com.campus.enums.RepairOrderStatus;
 import com.campus.service.RepairOrderService;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/repair")
@@ -29,7 +26,7 @@ public class RepairOrderController {
                           @RequestParam(required = false) Integer status) {
         Page<RepairOrder> p = new Page<>(page, size);
         LambdaQueryWrapper<RepairOrder> q = new LambdaQueryWrapper<>();
-        q.eq(status != null, RepairOrder::getStatus, status)
+        q.eq(status != null, RepairOrder::getStatus, status != null ? RepairOrderStatus.fromCode(status) : null)
          .orderByDesc(RepairOrder::getCreatedAt);
         return Result.success(repairOrderService.page(p, q));
     }
@@ -48,34 +45,52 @@ public class RepairOrderController {
 
     @GetMapping("/{id}")
     public Result<?> getById(@PathVariable Long id) {
-        return Result.success(repairOrderService.getById(id));
+        RepairOrder order = repairOrderService.getById(id);
+        if (order == null) {
+            return Result.error(404, "工单不存在");
+        }
+        // 验证权限：管理员可看所有，学生只能看自己的工单
+        Long currentUserId = UserContext.getUserId();
+        if (currentUserId == null) {
+            return Result.error(401, "未登录");
+        }
+        if (!currentUserId.equals(order.getUserId())) {
+            Integer role = UserContext.getRole();
+            if (role == null || role.intValue() < 1) {
+                return Result.error(403, "无权查看此工单");
+            }
+        }
+        return Result.success(order);
     }
 
     @PostMapping
     public Result<?> create(@RequestBody RepairOrder repairOrder) {
         Long userId = UserContext.getUserId();
         if (userId == null) return Result.error(401, "未登录");
-        repairOrder.setUserId(userId);
-        repairOrder.setStatus(0); // 待处理
-        // 生成工单编号 R + yyyyMMdd + 6位随机数
-        String date = DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now());
-        long random = (long) (Math.random() * 1000000);
-        repairOrder.setOrderNo(String.format("R%s%06d", date, random));
-        repairOrderService.save(repairOrder);
+        // RS6: 必填字段校验
+        if (repairOrder.getRepairType() == null || repairOrder.getRepairType().isBlank()) {
+            return Result.error(400, "报修类型不能为空");
+        }
+        if (repairOrder.getDescription() == null || repairOrder.getDescription().isBlank()) {
+            return Result.error(400, "报修描述不能为空");
+        }
+        repairOrderService.createOrder(repairOrder, userId);
         return Result.success(null);
     }
 
     @PutMapping("/{id}/status")
     @RoleRequired(1)
     public Result<?> updateStatus(@PathVariable Long id, @RequestBody RepairOrder update) {
-        RepairOrder order = repairOrderService.getById(id);
-        if (order == null) return Result.error(404, "工单不存在");
-        order.setStatus(update.getStatus());
-        if (update.getStatus() == 1) order.setHandleTime(LocalDateTime.now());
-        if (update.getStatus() == 2) order.setCompleteTime(LocalDateTime.now());
-        order.setRejectReason(update.getRejectReason());
-        order.setHandleResult(update.getHandleResult());
-        repairOrderService.updateById(order);
+        // RS3: 非空校验移入 Service，Controller 仍做防御
+        if (update.getStatus() == null) {
+            return Result.error(400, "工单状态不能为空");
+        }
+        Long handlerId = UserContext.getUserId();
+        boolean ok = repairOrderService.updateStatus(id, update.getStatus(), handlerId,
+                update.getRejectReason(), update.getHandleResult());
+        if (!ok) {
+            return Result.error(404, "工单不存在");
+        }
         return Result.success(null);
     }
 }

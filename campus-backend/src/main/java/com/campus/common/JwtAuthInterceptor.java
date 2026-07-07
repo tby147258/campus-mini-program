@@ -1,9 +1,12 @@
 package com.campus.common;
 
+import com.campus.annotation.NoAuth;
 import com.campus.annotation.RoleRequired;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -13,10 +16,13 @@ import java.util.Map;
 @Component
 public class JwtAuthInterceptor implements HandlerInterceptor {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthInterceptor.class);
+
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
 
-    private static final String[] WHITELIST = {"/api/auth/", "/api/file", "/error"};
+    /** 完全公开路径（无需 Token，无需 @NoAuth） — 使用精确前缀匹配 */
+    private static final String[] PUBLIC_WHITELIST = {"/api/file", "/error"};
 
     public JwtAuthInterceptor(JwtUtil jwtUtil, ObjectMapper objectMapper) {
         this.jwtUtil = jwtUtil;
@@ -25,10 +31,11 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 白名单路径跳过
         String path = request.getRequestURI();
-        for (String white : WHITELIST) {
-            if (path.startsWith(white)) {
+
+        // 1. 白名单：精确前缀匹配（JK5）
+        for (String white : PUBLIC_WHITELIST) {
+            if (path.equals(white) || path.startsWith(white + "/")) {
                 return true;
             }
         }
@@ -38,7 +45,29 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 提取 Bearer token（可选）
+        // 2. 解析方法注解信息
+        boolean hasNoAuth = false;
+        boolean hasRoleRequired = false;
+        int requiredRole = 0;
+
+        if (handler instanceof HandlerMethod hm) {
+            hasNoAuth = hm.getMethodAnnotation(NoAuth.class) != null;
+            RoleRequired rr = hm.getMethodAnnotation(RoleRequired.class);
+            if (rr != null) {
+                hasRoleRequired = true;
+                requiredRole = rr.value();
+            }
+        }
+
+        // JK8: @NoAuth + @RoleRequired 共存冲突检测
+        if (hasNoAuth && hasRoleRequired) {
+            String methodName = handler instanceof HandlerMethod hm
+                    ? hm.getMethod().getName() : "unknown";
+            log.warn("方法 {} 同时标注 @NoAuth 和 @RoleRequired({})，语义矛盾！@RoleRequired 将生效",
+                    methodName, requiredRole);
+        }
+
+        // 3. 尝试解析 Token
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
@@ -50,27 +79,38 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
                 request.setAttribute("userId", userId);
                 request.setAttribute("role", role);
 
-                // 设置 ThreadLocal 用户上下文
                 UserContext.set(userId, role);
+            } catch (io.jsonwebtoken.ExpiredJwtException e) {
+                writeJson(response, 401, "Token已过期，请重新登录");
+                return false;
+            } catch (io.jsonwebtoken.security.SecurityException e) {
+                writeJson(response, 401, "Token签名无效");
+                return false;
             } catch (Exception e) {
-                writeJson(response, 401, "Token无效或已过期");
+                writeJson(response, 401, "Token无效或格式错误");
                 return false;
             }
         }
 
-        // 检查角色注解（仅当 @RoleRequired 存在时拒绝未登录/权限不足）
-        if (handler instanceof HandlerMethod hm) {
-            RoleRequired roleRequired = hm.getMethodAnnotation(RoleRequired.class);
-            if (roleRequired != null) {
-                Integer role = (Integer) request.getAttribute("role");
-                if (role == null) {
-                    writeJson(response, 401, "未登录，请先登录");
-                    return false;
-                }
-                if (role.intValue() != roleRequired.value()) {
-                    writeJson(response, 403, "无权访问，权限不足");
-                    return false;
-                }
+        // 4. 非 @NoAuth 路径 → 要求登录（JK7：统一逻辑，移除 AUTH_ME_PATH 特殊分支）
+        if (!hasNoAuth) {
+            Integer role = (Integer) request.getAttribute("role");
+            if (role == null) {
+                writeJson(response, 401, "未登录，请先登录");
+                return false;
+            }
+        }
+
+        // 5. 检查角色注解
+        if (hasRoleRequired) {
+            Integer role = (Integer) request.getAttribute("role");
+            if (role == null) {
+                writeJson(response, 401, "未登录，请先登录");
+                return false;
+            }
+            if (role.intValue() < requiredRole) {
+                writeJson(response, 403, "无权访问，权限不足");
+                return false;
             }
         }
 

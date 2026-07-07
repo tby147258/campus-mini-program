@@ -1,5 +1,6 @@
 package com.campus.controller;
 
+import com.campus.annotation.NoAuth;
 import com.campus.common.Result;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ public class FileController {
     private String uploadPath;
 
     @PostMapping("/upload")
+    @NoAuth
     public Result<?> upload(@RequestParam("file") MultipartFile file) {
         try {
             String originalName = file.getOriginalFilename();

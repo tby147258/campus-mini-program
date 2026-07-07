@@ -2,6 +2,7 @@ package com.campus.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.campus.annotation.NoAuth;
 import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
 import com.campus.entity.Announcement;
@@ -18,6 +19,7 @@ public class AnnouncementController {
     }
 
     @GetMapping
+    @NoAuth
     public Result<?> list(@RequestParam(defaultValue = "1") int page,
                           @RequestParam(defaultValue = "10") int size,
                           @RequestParam(required = false) String category) {
@@ -30,6 +32,7 @@ public class AnnouncementController {
     }
 
     @GetMapping("/{id}")
+    @NoAuth
     public Result<?> getById(@PathVariable Long id) {
         return Result.success(announcementService.getById(id));
     }
