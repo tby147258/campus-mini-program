@@ -1,8 +1,8 @@
 @REM ----------------------------------------------------------------------------
-@REM Maven Wrapper - 无需全局安装 Maven，自动下载并使用指定版本
-@REM 用法: mvnw.cmd spring-boot:run   (启动后端)
-@REM        mvnw.cmd compile           (编译)
-@REM        mvnw.cmd clean install     (清理+打包)
+@REM Maven Wrapper - auto-download and use specified Maven version
+@REM Usage: mvnw.cmd spring-boot:run
+@REM        mvnw.cmd compile
+@REM        mvnw.cmd clean install
 @REM ----------------------------------------------------------------------------
 @REM Limited for Windows CMD - full wrapper downloads Maven automatically
 
@@ -53,14 +53,14 @@ set CLASSPATH=%APP_HOME%.mvn\wrapper\maven-wrapper.jar
 if not exist "%CLASSPATH%" (
     echo Downloading Maven Wrapper jar... 1>&2
     @REM Try to download using PowerShell
-    powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar' -OutFile '%CLASSPATH%'; Write-Host 'Downloaded maven-wrapper.jar'}" 2>&1
+    powershell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://maven.aliyun.com/repository/central/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar' -OutFile '%CLASSPATH%'; Write-Host 'Downloaded maven-wrapper.jar'}" 2>&1
     if %ERRORLEVEL% equ 0 (
         echo Maven Wrapper jar downloaded. 1>&2
     ) else (
         echo.
         echo WARNING: Could not download Maven Wrapper jar. 1>&2
         echo You can manually download it from: 1>&2
-        echo   https://repo1.maven.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar 1>&2
+        echo   https://maven.aliyun.com/repository/central/org/apache/maven/wrapper/maven-wrapper/3.2.0/maven-wrapper-3.2.0.jar 1>&2
         echo And save it to: %CLASSPATH% 1>&2
         goto execute_with_maven_home
     )
