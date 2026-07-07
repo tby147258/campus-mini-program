@@ -67,7 +67,8 @@ if not exist "%CLASSPATH%" (
 )
 
 @REM Execute Maven using the wrapper jar
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% -classpath "%CLASSPATH%" org.apache.maven.wrapper.MavenWrapperMain %*
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% "-Dmaven.multiModuleProjectDirectory=%APP_HOME%\campus-backend" -classpath "%CLASSPATH%" org.apache.maven.wrapper.MavenWrapperMain %*
+goto :EOF
 
 :execute_with_maven_home
 @REM Fallback: use MAVEN_HOME if set
