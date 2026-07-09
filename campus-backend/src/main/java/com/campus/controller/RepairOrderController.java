@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/repair")
+@SuppressWarnings("null")
 public class RepairOrderController {
     private final RepairOrderService repairOrderService;
 

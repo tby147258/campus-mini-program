@@ -12,6 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/system-config")
+@SuppressWarnings("null")
 public class SystemConfigController {
     private final SystemConfigService systemConfigService;
 

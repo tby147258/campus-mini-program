@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.Serializable;
 
 @Service
+@SuppressWarnings("null")
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     @Override

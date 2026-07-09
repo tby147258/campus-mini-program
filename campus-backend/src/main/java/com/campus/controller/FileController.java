@@ -20,6 +20,9 @@ public class FileController {
     public Result<?> upload(@RequestParam("file") MultipartFile file) {
         try {
             String originalName = file.getOriginalFilename();
+            if (originalName == null || originalName.isBlank()) {
+                return Result.error(400, "文件名为空");
+            }
             String ext = originalName.substring(originalName.lastIndexOf("."));
             String fileName = UUID.randomUUID() + ext;
             File dest = new File(uploadPath, fileName);

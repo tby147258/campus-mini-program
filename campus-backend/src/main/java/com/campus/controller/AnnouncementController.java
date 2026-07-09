@@ -10,7 +10,8 @@ import com.campus.service.AnnouncementService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/announcements")
+@RequestMapping("/api/announcement")
+@SuppressWarnings("null")
 public class AnnouncementController {
     private final AnnouncementService announcementService;
 
@@ -26,7 +27,7 @@ public class AnnouncementController {
         Page<Announcement> p = new Page<>(page, size);
         LambdaQueryWrapper<Announcement> q = new LambdaQueryWrapper<>();
         q.eq(Announcement::getStatus, 1)
-         .eq(category != null, Announcement::getCategory, category)
+         .eq(category != null && !category.isBlank(), Announcement::getCategory, category)
          .orderByDesc(Announcement::getCreatedAt);
         return Result.success(announcementService.page(p, q));
     }

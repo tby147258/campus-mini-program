@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/operation-logs")
 @RoleRequired(1)
+@SuppressWarnings("null")
 public class OperationLogController {
 
     private final OperationLogService operationLogService;

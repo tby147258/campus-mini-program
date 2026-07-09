@@ -22,6 +22,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/users")
 @RoleRequired(1)
+@SuppressWarnings("null")
 public class UserController {
 
     private final UserService userService;

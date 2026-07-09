@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/lost-found")
+@SuppressWarnings("null")
 public class LostFoundController {
     private final LostFoundService lostFoundService;
 

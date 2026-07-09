@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@SuppressWarnings("null")
 public class CaptchaService {
 
     private final StringRedisTemplate redisTemplate;

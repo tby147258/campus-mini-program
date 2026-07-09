@@ -7,6 +7,7 @@ import com.campus.service.SystemConfigService;
 import org.springframework.stereotype.Service;
 
 @Service
+@SuppressWarnings("null")
 public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigMapper, SystemConfig> implements SystemConfigService {
 
     @Override

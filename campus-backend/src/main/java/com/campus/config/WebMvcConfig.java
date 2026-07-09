@@ -2,11 +2,13 @@ package com.campus.config;
 
 import com.campus.common.JwtAuthInterceptor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@SuppressWarnings("null")
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final JwtAuthInterceptor jwtAuthInterceptor;
@@ -16,7 +18,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     @Override
-    public void addCorsMappings(CorsRegistry registry) {
+    public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/**")
                 // JK6: allowCredentials(true) 时禁止通配 Origin，限定可信源
                 .allowedOriginPatterns("http://localhost:*", "https://localhost:*",
@@ -27,7 +29,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
+    public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(jwtAuthInterceptor)
                 .addPathPatterns("/**");
         // JK4: /api/weather/** 已使用 @NoAuth 注解，不再需要 excludePathPatterns
