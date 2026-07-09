@@ -1,11 +1,11 @@
 <view class="container">
   <view class="card">
-    <view class="section-title">发布信息</view>
+    <view class="section-title">{{isEdit ? '编辑信息' : '发布信息'}}</view>
 
     <view class="form-item">
       <text class="form-label">类型</text>
       <picker mode="selector" range="{{types}}" bindchange="onTypeChange">
-        <view class="picker-value">{{form.typeName || '请选择类型'}}</view>
+        <view class="picker-value">{{types[form.type] || '请选择类型'}}</view>
       </picker>
     </view>
 
@@ -34,6 +34,6 @@
       <input class="form-input" placeholder="请输入手机号" value="{{form.contactPhone}}" bindinput="onFieldChange" data-field="contactPhone" />
     </view>
 
-    <button class="submit-btn" bindtap="submitPublish" loading="{{submitting}}">提交发布</button>
+    <button class="submit-btn" bindtap="submitPublish" loading="{{submitting}}">{{isEdit ? '保存修改' : '提交发布'}}</button>
   </view>
 </view>

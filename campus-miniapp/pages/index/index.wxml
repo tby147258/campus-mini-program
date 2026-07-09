@@ -1,4 +1,3 @@
-<!-- pages/index/index.wxml -->
 <view class="container">
   <!-- 轮播图 -->
   <swiper class="swiper" indicator-dots autoplay circular>
@@ -36,11 +35,16 @@
 
   <!-- 公告列表 -->
   <view class="section-title">校园公告</view>
-  <view class="card" wx:for="{{announcements}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-    <view class="announce-title">{{item.title}}</view>
-    <view class="announce-meta">
-      <text>{{item.category}}</text>
-      <text>{{item.createdAt}}</text>
+  <view wx:if="{{announcements.length > 0}}">
+    <view class="card" wx:for="{{announcements}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="announce-title">{{item.title}}</view>
+      <view class="announce-meta">
+        <text>{{item.category}}</text>
+        <text>{{item.createdAt}}</text>
+      </view>
     </view>
+  </view>
+  <view wx:else class="empty-state">
+    <text>暂无公告</text>
   </view>
 </view>

@@ -11,3 +11,4 @@
 .section-title { font-size: 32rpx; font-weight: bold; margin-bottom: 16rpx; padding-left: 8rpx; border-left: 6rpx solid #2F5496; }
 .announce-title { font-size: 28rpx; font-weight: 500; margin-bottom: 8rpx; }
 .announce-meta { font-size: 24rpx; color: #999; display: flex; gap: 16rpx; }
+.empty-state { text-align: center; padding: 60rpx 0; color: #bbb; font-size: 28rpx; }

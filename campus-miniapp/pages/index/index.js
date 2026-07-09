@@ -1,37 +1,60 @@
+const { request } = require('../../utils/request')
+
 Page({
   data: {
-    banners: [],
+    banners: [
+      '/images/banner_default.png'
+    ],
     weather: { temp: '--', text: '加载中', city: '--' },
     announcements: []
   },
+
   onLoad() {
     this.loadWeather()
     this.loadAnnouncements()
   },
+
+  onShow() {
+    this.loadAnnouncements()
+  },
+
+  onPullDownRefresh() {
+    Promise.all([
+      this.loadWeather(),
+      this.loadAnnouncements()
+    ]).finally(() => {
+      wx.stopPullDownRefresh()
+    })
+  },
+
   loadWeather() {
     const app = getApp()
-    wx.request({
-      url: app.globalData.baseUrl + '/weather/now?location=101010100',
-      success: (res) => {
-        if (res.data.data) {
-          this.setData({ weather: res.data.data.now || {} })
-        }
+    return request({
+      url: '/weather/now?location=101010100',
+      showLoading: false
+    }).then(data => {
+      if (data && data.now) {
+        this.setData({ weather: data.now })
       }
-    })
+    }).catch(() => {})
   },
+
   loadAnnouncements() {
-    const app = getApp()
-    wx.request({
-      url: app.globalData.baseUrl + '/announcements',
-      success: (res) => {
-        this.setData({ announcements: res.data.data.records || [] })
-      }
-    })
+    return request({
+      url: '/announcement',
+      showLoading: false
+    }).then(data => {
+      const records = data.records || data || []
+      this.setData({ announcements: records })
+    }).catch(() => {})
   },
+
   goLostFound() { wx.switchTab({ url: '/pages/lostfound/index' }) },
   goRepair() { wx.switchTab({ url: '/pages/repair/index' }) },
   goWeather() { wx.showToast({ title: '当前天气已展示在首页', icon: 'none' }) },
+
   goDetail(e) {
-    wx.navigateTo({ url: `/pages/index/detail?id=${e.currentTarget.dataset.id}` })
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({ url: '/pages/index/detail?id=' + id })
   }
 })

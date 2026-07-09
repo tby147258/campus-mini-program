@@ -1,3 +1,5 @@
+const { request } = require('../../utils/request')
+
 Page({
   data: {
     repairTypes: ['水暖维修', '电力维修', '门窗维修', '网络故障', '设备报修', '其他'],
@@ -14,6 +16,16 @@ Page({
 
   onLoad() {
     this.loadMyOrders()
+  },
+
+  onShow() {
+    this.loadMyOrders()
+  },
+
+  onPullDownRefresh() {
+    this.loadMyOrders().finally(() => {
+      wx.stopPullDownRefresh()
+    })
   },
 
   onTypeChange(e) {
@@ -79,38 +91,30 @@ Page({
     }
 
     this.setData({ submitting: true })
-    const app = getApp()
-    wx.request({
-      url: app.globalData.baseUrl + '/repair',
+
+    request({
+      url: '/repair',
       method: 'POST',
-      data: form,
-      header: {
-        'Authorization': 'Bearer ' + app.globalData.token,
-        'Content-Type': 'application/json'
-      },
-      success: (res) => {
-        wx.showToast({ title: '提交成功' })
-        this.setData({
-          form: { repairType: '', location: '', description: '', images: [], contact: '' }
-        })
-        this.loadMyOrders()
-      },
-      fail: () => {
-        wx.showToast({ title: '提交失败，请重试', icon: 'none' })
-      },
-      complete: () => {
-        this.setData({ submitting: false })
-      }
+      data: form
+    }).then(() => {
+      wx.showToast({ title: '提交成功' })
+      this.setData({
+        form: { repairType: '', location: '', description: '', images: [], contact: '' }
+      })
+      this.loadMyOrders()
+    }).catch(() => {
+      wx.showToast({ title: '提交失败，请重试', icon: 'none' })
+    }).finally(() => {
+      this.setData({ submitting: false })
     })
   },
 
   loadMyOrders() {
-    const app = getApp()
-    wx.request({
-      url: app.globalData.baseUrl + '/repair/my-orders',
-      success: (res) => {
-        this.setData({ myOrders: res.data.data || res.data.records || [] })
-      }
-    })
+    return request({
+      url: '/repair/my-orders',
+      showLoading: false
+    }).then(data => {
+      this.setData({ myOrders: data.records || data || [] })
+    }).catch(() => {})
   }
 })

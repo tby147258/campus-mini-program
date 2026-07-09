@@ -1,0 +1,39 @@
+.detail-header {
+  margin-bottom: 24rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 2rpx solid #f0f0f0;
+}
+.detail-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 16rpx;
+  display: block;
+}
+.detail-meta {
+  display: flex;
+  gap: 20rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+.detail-category {
+  background: #f0f5ff;
+  color: #2F5496;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+}
+.detail-body {
+  font-size: 30rpx;
+  color: #444;
+  line-height: 1.8;
+}
+.detail-content {
+  display: block;
+}
+.empty-state {
+  text-align: center;
+  padding: 200rpx 0;
+  color: #bbb;
+  font-size: 28rpx;
+}

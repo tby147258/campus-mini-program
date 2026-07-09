@@ -1,0 +1,18 @@
+<view class="container">
+  <view class="card" wx:if="{{announcement}}">
+    <view class="detail-header">
+      <text class="detail-title">{{announcement.title}}</text>
+      <view class="detail-meta">
+        <text class="detail-category">{{announcement.category}}</text>
+        <text class="detail-time">{{announcement.createdAt}}</text>
+      </view>
+    </view>
+    <view class="detail-body">
+      <text class="detail-content">{{announcement.content}}</text>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <text>加载中...</text>
+  </view>
+</view>

@@ -17,9 +17,9 @@
     <text>发布</text>
   </view>
 
-  <!-- 失物/寻物卡片列表 -->
+  <!-- 列表 -->
   <view wx:if="{{list.length > 0}}">
-    <view class="card" wx:for="{{list}}" wx:key="id" data-id="{{item.id}}">
+    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
       <view class="card-header">
         <text class="item-name">{{item.itemName}}</text>
         <text class="type-tag {{item.type === 0 ? 'tag-lost' : 'tag-found'}}">

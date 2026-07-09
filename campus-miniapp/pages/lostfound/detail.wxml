@@ -1,0 +1,61 @@
+<view class="container">
+  <view class="card" wx:if="{{detail}}">
+    <!-- 头部信息 -->
+    <view class="detail-header">
+      <text class="item-name">{{detail.itemName}}</text>
+      <text class="type-tag {{detail.type === 0 ? 'tag-lost' : 'tag-found'}}">
+        {{detail.type === 0 ? '失物招领' : '寻物启事'}}
+      </text>
+    </view>
+
+    <!-- 状态标签 -->
+    <view class="status-bar">
+      <text class="status-tag status-{{detail.status}}">
+        <text wx:if="{{detail.status === 0}}">待审核</text>
+        <text wx:elif="{{detail.status === 1}}">已发布</text>
+        <text wx:elif="{{detail.status === 2}}">已驳回</text>
+        <text wx:else>已关闭</text>
+      </text>
+    </view>
+
+    <!-- 详细信息 -->
+    <view class="detail-body">
+      <view class="info-row">
+        <text class="info-label">物品名称</text>
+        <text class="info-value">{{detail.itemName}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">地点</text>
+        <text class="info-value">{{detail.location}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">时间</text>
+        <text class="info-value">{{detail.createdAt}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.contactPerson}}">
+        <text class="info-label">联系人</text>
+        <text class="info-value">{{detail.contactPerson}}</text>
+      </view>
+      <view class="info-row" wx:if="{{detail.contactPhone}}">
+        <text class="info-label">联系电话</text>
+        <text class="info-value">{{detail.contactPhone}}</text>
+      </view>
+    </view>
+
+    <!-- 描述 -->
+    <view class="desc-section" wx:if="{{detail.description}}">
+      <text class="desc-label">详细描述</text>
+      <text class="desc-content">{{detail.description}}</text>
+    </view>
+
+    <!-- 操作按钮（仅自己的发布） -->
+    <view class="action-bar" wx:if="{{isOwner}}">
+      <button class="action-btn edit-btn" bindtap="goEdit">编辑</button>
+      <button class="action-btn delete-btn" bindtap="confirmDelete">删除</button>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <text>加载中...</text>
+  </view>
+</view>

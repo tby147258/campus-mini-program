@@ -1,7 +1,9 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/index/detail",
     "pages/lostfound/index",
+    "pages/lostfound/detail",
     "pages/lostfound/publish",
     "pages/repair/index",
     "pages/profile/index"

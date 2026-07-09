@@ -1,3 +1,5 @@
+const { request } = require('../../utils/request')
+
 Page({
   data: {
     type: 0,
@@ -14,23 +16,27 @@ Page({
     this.loadList()
   },
 
-  loadList() {
-    const app = getApp()
-    wx.request({
-      url: app.globalData.baseUrl + '/lost-found',
-      success: (res) => {
-        const records = res.data.data || res.data.records || []
-        this.setData({ allList: records, list: records })
-        this.filterByType()
-      }
+  onPullDownRefresh() {
+    this.loadList().finally(() => {
+      wx.stopPullDownRefresh()
     })
+  },
+
+  loadList() {
+    return request({
+      url: '/lost-found',
+      showLoading: false
+    }).then(data => {
+      const records = data.records || data || []
+      this.setData({ allList: records })
+      this.applyFilters()
+    }).catch(() => {})
   },
 
   switchType(e) {
     const type = parseInt(e.currentTarget.dataset.type)
     this.setData({ type }, () => {
-      this.filterByType()
-      this.filterBySearch()
+      this.applyFilters()
     })
   },
 
@@ -39,30 +45,29 @@ Page({
   },
 
   onSearch() {
-    this.filterBySearch()
+    this.applyFilters()
   },
 
-  filterByType() {
-    const { allList, type } = this.data
-    const filtered = allList.filter(item => item.type === type)
-    this.setData({ list: filtered })
-  },
-
-  filterBySearch() {
-    const { allList, searchText, type } = this.data
+  applyFilters() {
+    const { allList, type, searchText } = this.data
     let filtered = allList.filter(item => item.type === type)
     if (searchText.trim()) {
       filtered = filtered.filter(item =>
-        item.itemName.indexOf(searchText) !== -1 ||
-        item.location.indexOf(searchText) !== -1
+        (item.itemName && item.itemName.indexOf(searchText) !== -1) ||
+        (item.location && item.location.indexOf(searchText) !== -1)
       )
     }
     this.setData({ list: filtered })
   },
 
+  goDetail(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({ url: '/pages/lostfound/detail?id=' + id })
+  },
+
   goPublish() {
     wx.navigateTo({
-      url: '/pages/lostfound/publish?type=' + this.data.type
+      url: '/pages/lostfound/publish'
     })
   }
 })
