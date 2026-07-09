@@ -217,6 +217,92 @@ function encodePNG(pixelData) {
     return Buffer.concat([signature, ihdrChunk, idatChunk, iendChunk]);
 }
 
+// ---- Additional icons ----
+
+// Weather icon (sun)
+function drawWeather(buf, color) {
+    const { r, g, b } = color;
+    // Sun circle
+    fillCircle(buf, 20, 18, 7, r, g, b);
+    // Sun rays
+    const rays = [[20,3],[20,5],[20,31],[20,33],[3,18],[5,18],[35,18],[37,18],[7,7],[9,9],[31,31],[33,33],[7,29],[9,27],[31,9],[33,7]];
+    for (const [rx, ry] of rays) {
+        setPixel(buf, rx, ry, r, g, b);
+    }
+}
+
+// Lost icon (for grid menu - same as tab_lost but 64x64 will be scaled)
+function drawIconLost(buf, color) {
+    drawLost(buf, color);
+}
+
+// Repair icon (for grid menu - same as tab_repair but 64x64 will be scaled)
+function drawIconRepair(buf, color) {
+    drawRepair(buf, color);
+}
+
+// Banner (solid blue gradient rectangle 750x300)
+const BANNER_W = 750;
+const BANNER_H = 300;
+const BANNER_COLOR = { r: 47, g: 84, b: 150 };
+
+function createBannerBuffer() {
+    return Buffer.alloc(BANNER_W * BANNER_H * 4, 255);
+}
+
+function createBanner() {
+    const buf = createBannerBuffer();
+    for (let y = 0; y < BANNER_H; y++) {
+        for (let x = 0; x < BANNER_W; x++) {
+            const idx = (y * BANNER_W + x) * 4;
+            const ratio = y / BANNER_H;
+            const r = Math.round(47 + (74 - 47) * ratio);
+            const g = Math.round(84 + (123 - 84) * ratio);
+            const b = Math.round(150 + (196 - 150) * ratio);
+            buf[idx] = r;
+            buf[idx + 1] = g;
+            buf[idx + 2] = b;
+            buf[idx + 3] = 255;
+        }
+    }
+    return buf;
+}
+
+function encodePNGWithSize(pixelData, w, h) {
+    const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+
+    // IHDR
+    const ihdr = Buffer.alloc(13);
+    ihdr.writeUInt32BE(w, 0);
+    ihdr.writeUInt32BE(h, 0);
+    ihdr[8] = 8;
+    ihdr[9] = 6;
+    ihdr[10] = 0;
+    ihdr[11] = 0;
+    ihdr[12] = 0;
+    const ihdrChunk = chunk('IHDR', ihdr);
+
+    // IDAT
+    const raw = Buffer.alloc(h * (1 + w * 4));
+    for (let y = 0; y < h; y++) {
+        raw[y * (1 + w * 4)] = 0;
+        for (let x = 0; x < w; x++) {
+            const srcIdx = (y * w + x) * 4;
+            const dstIdx = y * (1 + w * 4) + 1 + x * 4;
+            raw[dstIdx] = pixelData[srcIdx];
+            raw[dstIdx + 1] = pixelData[srcIdx + 1];
+            raw[dstIdx + 2] = pixelData[srcIdx + 2];
+            raw[dstIdx + 3] = pixelData[srcIdx + 3];
+        }
+    }
+
+    const compressed = zlib.deflateSync(raw, { level: 9 });
+    const idatChunk = chunk('IDAT', compressed);
+    const iendChunk = chunk('IEND', Buffer.alloc(0));
+
+    return Buffer.concat([signature, ihdrChunk, idatChunk, iendChunk]);
+}
+
 // ---- Main ----
 
 const icons = [
@@ -224,11 +310,16 @@ const icons = [
     { name: 'tab_lost', draw: drawLost },
     { name: 'tab_repair', draw: drawRepair },
     { name: 'tab_profile', draw: drawProfile },
+    { name: 'icon_lost', draw: drawIconLost },
+    { name: 'icon_repair', draw: drawIconRepair },
+    { name: 'icon_weather', draw: drawWeather },
 ];
 
 if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
+
+const tabIconNames = ['tab_home', 'tab_lost', 'tab_repair', 'tab_profile'];
 
 for (const icon of icons) {
     // Normal version
@@ -238,12 +329,21 @@ for (const icon of icons) {
     fs.writeFileSync(path.join(OUTPUT_DIR, icon.name + '.png'), pngNormal);
     console.log(`Created: ${icon.name}.png (${pngNormal.length} bytes)`);
 
-    // Active version
-    const bufActive = createBuffer();
-    icon.draw(bufActive, ACTIVE_COLOR);
-    const pngActive = encodePNG(bufActive);
-    fs.writeFileSync(path.join(OUTPUT_DIR, icon.name + '_active.png'), pngActive);
-    console.log(`Created: ${icon.name}_active.png (${pngActive.length} bytes)`);
+    // Active version only for tab icons
+    if (tabIconNames.includes(icon.name)) {
+        const bufActive = createBuffer();
+        icon.draw(bufActive, ACTIVE_COLOR);
+        const pngActive = encodePNG(bufActive);
+        fs.writeFileSync(path.join(OUTPUT_DIR, icon.name + '_active.png'), pngActive);
+        console.log(`Created: ${icon.name}_active.png (${pngActive.length} bytes)`);
+    }
 }
 
-console.log('\nAll 8 icons generated successfully!');
+// Generate banner
+console.log('Creating banner_default.png (750x300)...');
+const bannerBuf = createBanner();
+const bannerPng = encodePNGWithSize(bannerBuf, BANNER_W, BANNER_H);
+fs.writeFileSync(path.join(OUTPUT_DIR, 'banner_default.png'), bannerPng);
+console.log(`Created: banner_default.png (${bannerPng.length} bytes)`);
+
+console.log('\nAll icons generated successfully!');
