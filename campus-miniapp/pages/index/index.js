@@ -6,7 +6,8 @@ Page({
       '/images/banner_default.png'
     ],
     weather: { temp: '--', text: '加载中', city: '--' },
-    announcements: []
+    announcements: [],
+    _loading: false
   },
 
   onLoad() {
@@ -15,7 +16,9 @@ Page({
   },
 
   onShow() {
-    this.loadAnnouncements()
+    if (!this.data._loading) {
+      this.loadAnnouncements()
+    }
   },
 
   onPullDownRefresh() {

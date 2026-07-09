@@ -11,7 +11,8 @@ Page({
       contact: ''
     },
     myOrders: [],
-    submitting: false
+    submitting: false,
+    _loading: false
   },
 
   onLoad() {
@@ -19,7 +20,9 @@ Page({
   },
 
   onShow() {
-    this.loadMyOrders()
+    if (!this.data._loading) {
+      this.loadMyOrders()
+    }
   },
 
   onPullDownRefresh() {
@@ -110,11 +113,14 @@ Page({
   },
 
   loadMyOrders() {
+    this.data._loading = true
     return request({
       url: '/repair/my-orders',
       showLoading: false
     }).then(data => {
       this.setData({ myOrders: data.records || data || [] })
-    }).catch(() => {})
+    }).catch(() => {}).finally(() => {
+      this.data._loading = false
+    })
   }
 })

@@ -5,7 +5,8 @@ Page({
     type: 0,
     list: [],
     searchText: '',
-    allList: []
+    allList: [],
+    _loading: false
   },
 
   onLoad() {
@@ -13,7 +14,9 @@ Page({
   },
 
   onShow() {
-    this.loadList()
+    if (!this.data._loading) {
+      this.loadList()
+    }
   },
 
   onPullDownRefresh() {
@@ -23,6 +26,7 @@ Page({
   },
 
   loadList() {
+    this.data._loading = true
     return request({
       url: '/lost-found',
       showLoading: false
@@ -30,7 +34,9 @@ Page({
       const records = data.records || data || []
       this.setData({ allList: records })
       this.applyFilters()
-    }).catch(() => {})
+    }).catch(() => {}).finally(() => {
+      this.data._loading = false
+    })
   },
 
   switchType(e) {
