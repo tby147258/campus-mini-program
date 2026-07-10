@@ -12,40 +12,50 @@
 | **管理后台** | Vue 3 + Element Plus + Pinia | 管理员Web端 |
 | **后端服务** | Spring Boot 3.2 + MyBatis-Plus | RESTful API |
 | **数据库** | MySQL 8.0 | 关系型数据库 |
-| **开发工具** | VSCode + Claude Code + DeepSeek | AI辅助开发 |
-| **天气服务** | 和风天气API | 实时天气查询Skill |
+| **开发工具** | Trae IDE (DeepSeek-V4-Flash) | AI辅助开发 |
+| **天气服务** | 和风天气API | 实时天气查询 |
+| **认证鉴权** | JWT (JJWT 0.12.x) + BCrypt | Token认证与密码加密 |
+| **缓存** | Redis 6.x | 验证码存储、数据缓存 |
 
 ## 项目结构
 
 ```
 campus-workspace/
-├── campus-backend/          # SpringBoot 后端服务
+├── campus-backend/              # SpringBoot 后端服务
 │   ├── src/main/java/com/campus/
-│   │   ├── controller/      # API控制器（Auth/公告/失物/报修/文件/天气）
-│   │   ├── service/         # 业务逻辑层
-│   │   ├── mapper/          # MyBatis-Plus数据访问层
-│   │   ├── entity/          # 数据实体（User/Announcement/LostFound/RepairOrder）
-│   │   ├── config/          # 配置类（CORS/JWT/MyBatis-Plus）
-│   │   └── common/          # 通用工具（Result/JWT/自动填充）
+│   │   ├── annotation/          # 自定义注解（@NoAuth, @RoleRequired）
+│   │   ├── common/              # 通用组件（Result, JwtUtil, 拦截器, 异常处理, 自动填充）
+│   │   ├── config/              # 配置类（CORS, JWT, MyBatis-Plus, Redis）
+│   │   ├── controller/          # API控制器（Auth/公告/失物/报修/文件/天气/统计/配置）
+│   │   ├── dto/                 # 数据传输对象
+│   │   ├── entity/              # 数据实体（User/Announcement/LostFound/RepairOrder等7个）
+│   │   ├── enums/               # 枚举类（UserRole/UserStatus/RepairOrderStatus等5个）
+│   │   ├── mapper/              # MyBatis-Plus数据访问层
+│   │   └── service/             # 业务逻辑层（接口+实现）
 │   └── src/main/resources/
-│       ├── application.yml  # 主配置文件
-│       └── mapper/          # XML映射文件
-├── campus-admin/            # Vue 3 管理后台
+│       ├── application.yml      # 主配置文件
+│       └── mapper/              # XML映射文件
+├── campus-admin/                # Vue 3 管理后台
 │   └── src/
-│       ├── views/           # 页面组件
-│       ├── router/          # 路由配置
-│       ├── api/             # API请求封装
-│       └── store/           # 状态管理
-├── campus-miniapp/          # 微信小程序
-│   └── pages/
-│       ├── index/           # 首页（公告+天气+快捷入口）
-│       ├── lostfound/       # 失物招领
-│       ├── repair/          # 报修中心
-│       └── profile/         # 个人中心
-└── docs/                    # 项目文档
-    ├── 可行性分析报告.docx
-    ├── 需求分析报告.docx
-    └── 概要设计说明书.docx
+│       ├── views/               # 页面组件（登录/仪表盘/公告/失物/工单/用户/统计/配置/日志）
+│       ├── router/              # 路由配置
+│       ├── api/                 # API请求封装
+│       └── components/          # 通用组件（CaptchaSlider滑块验证码）
+├── campus-miniapp/              # 微信小程序
+│   ├── pages/
+│   │   ├── index/               # 首页（公告轮播+天气卡片+快捷入口）
+│   │   ├── lostfound/           # 失物招领（列表+发布+详情+搜索）
+│   │   ├── repair/              # 报修中心（提交+记录查询）
+│   │   └── profile/             # 个人中心（登录+信息完善）
+│   └── utils/                   # 工具函数（request请求封装）
+└── docs/                        # 项目文档
+    ├── database/                # 数据库设计文档
+    │   ├── schema.sql           # 完整建表SQL（7张表+22个索引）
+    │   ├── test_data.sql        # 测试数据
+    │   ├── data_dictionary.md   # 数据字典
+    │   └── er_diagram.svg       # E-R图
+    ├── 项目开发报告-学号-姓名.docx  # 完整项目开发报告（含6章）
+    └── 毕业实习报告-学号-姓名.docx  # 毕业实习报告
 ```
 
 ## 功能清单
@@ -74,11 +84,12 @@ campus-workspace/
 
 | 接口分类 | 功能 |
 |----------|------|
-| 🔐 **鉴权** | 微信小程序登录、管理员登录、JWT Token签发与校验 |
+| 🔐 **鉴权** | 微信小程序登录、管理员登录、JWT Token签发与校验、滑块验证码 |
 | 📂 **文件上传** | 单/多图上传、格式与大小校验 |
 | 🌤️ **天气API** | 实时天气查询、天气预报、接口缓存 |
 | 🔄 **工单流转** | 创建→受理→处理中→完成/驳回，全状态机管理 |
-| 📋 **业务CRUD** | 公告/失物/用户/统计增删改查 |
+| 📋 **业务CRUD** | 公告/失物/用户/统计/系统配置增删改查 |
+| 📝 **操作日志** | 系统操作审计追溯 |
 
 ## 快速启动
 
@@ -87,34 +98,61 @@ campus-workspace/
 - JDK 17+
 - Node.js 18+
 - MySQL 8.0+
+- Redis 6.x+
 - 微信开发者工具
 - Maven 3.8+
 
 ### 启动步骤
 
 **1. 数据库初始化**
-```sql
+```bash
+# 创建数据库
+mysql -u root -p
 CREATE DATABASE campus DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+# 导入建表脚本和测试数据
+mysql -u root -p campus < docs/database/schema.sql
+mysql -u root -p campus < docs/database/test_data.sql
 ```
 
-**2. 启动后端**
+**2. 启动Redis**
+```bash
+# 默认端口6379，无需密码
+redis-server
+```
+
+**3. 启动后端**
 ```bash
 cd campus-backend
-# 修改 application.yml 中的数据库配置
-mvn spring-boot:run
+# 确保 application.yml 中数据库和Redis配置正确
+# 本地开发默认使用 root/123456 + 本地Redis
+.\mvnw.cmd -f pom.xml spring-boot:run
 ```
 
-**3. 启动管理后台**
+**4. 启动管理后台**
 ```bash
 cd campus-admin
 npm install
 npm run dev
 ```
+访问 http://localhost:3000
 
-**4. 运行小程序**
+**5. 运行小程序**
 - 打开微信开发者工具
 - 导入 `campus-miniapp` 目录
 - 编译运行
+
+## 项目文档
+
+项目配套文档位于 `docs/` 目录：
+
+| 文档 | 说明 |
+|------|------|
+| [项目开发报告](docs/项目开发报告-学号-姓名.docx) | 完整项目开发文档（可行性分析、需求分析、概要设计、数据库设计、详细设计与实现、系统测试） |
+| [毕业实习报告](docs/毕业实习报告-学号-姓名.docx) | 毕业实习报告模板 |
+| [数据库设计文档](docs/database/) | 数据库建表SQL、测试数据、数据字典、E-R图 |
+| [数据字典](docs/database/data_dictionary.md) | 7张表字段清单、索引方案、逻辑外键关系 |
+| [E-R图](docs/database/er_diagram.svg) | 实体关系图 |
 
 ## 开发计划
 
