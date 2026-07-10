@@ -195,16 +195,16 @@ function verify() {
 }
 .puzzle-wrapper {
   position: relative;
-  width: 100%;
-  height: 160px;
+  width: 280px;
+  height: 150px;
+  margin: 0 auto;
   overflow: hidden;
   border-radius: 4px;
   margin-bottom: 12px;
 }
 .puzzle-bg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 280px;
+  height: 150px;
 }
 .puzzle-piece {
   position: absolute;
@@ -214,7 +214,8 @@ function verify() {
   z-index: 10;
 }
 .slider-wrapper {
-  margin-bottom: 12px;
+  width: 280px;
+  margin: 0 auto 12px;
 }
 .slider-track {
   position: relative;
