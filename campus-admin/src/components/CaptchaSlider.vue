@@ -72,7 +72,8 @@ function loadCaptcha() {
   status.value = 'loading'
   captchaApi.get()
     .then(res => {
-      localImage.value = res.puzzleImage || res.image || ''
+      // 后端返回 bgImage（带缺口的背景图）和 puzzleImage（拼图块），背景图用 bgImage
+      localImage.value = res.bgImage || res.puzzleImage || res.image || ''
       localToken.value = res.token || ''
       status.value = 'pending'
     })
