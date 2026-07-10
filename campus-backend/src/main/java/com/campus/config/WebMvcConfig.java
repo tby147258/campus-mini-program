@@ -8,7 +8,6 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@SuppressWarnings("null")
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final JwtAuthInterceptor jwtAuthInterceptor;
@@ -24,6 +23,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedOriginPatterns("http://localhost:*", "https://localhost:*",
                         "http://127.0.0.1:*", "https://127.0.0.1:*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("Authorization", "Content-Type", "X-Requested-With")
+                .exposedHeaders("X-RateLimit-Remaining", "X-RateLimit-Reset")
                 .allowCredentials(true)
                 .maxAge(3600);
     }
@@ -31,8 +32,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(jwtAuthInterceptor)
-                .addPathPatterns("/**");
-        // JK4: /api/weather/** 已使用 @NoAuth 注解，不再需要 excludePathPatterns
-        //      统一使用 @NoAuth 作为业务公开接口标记方式
+                .addPathPatterns("/**")
+                // 公开接口路径，非 @NoAuth 注解的纵深防御
+                .excludePathPatterns("/api/captcha/**")
+                // 静态资源路径
+                .excludePathPatterns("/static/**", "/public/**", "/resources/**",
+                        "/favicon.ico", "/error");
     }
 }

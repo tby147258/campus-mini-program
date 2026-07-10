@@ -35,7 +35,7 @@ const statusMap = { 0: { label: '待处理', type: 'warning' }, 1: { label: '处
 
 const loadList = async () => {
   const res = await repairApi.list({ page: 1, size: 100 })
-  list.value = res.data.records || []
+  list.value = res.records || []
 }
 
 const handleStatus = async (id, status) => {

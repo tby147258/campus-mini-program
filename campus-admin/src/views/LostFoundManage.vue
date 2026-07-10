@@ -53,8 +53,8 @@ const loadData = async () => {
   const p1 = lostFoundApi.list({ page: 1, size: 100, status: 0 })
   const p2 = lostFoundApi.list({ page: 1, size: 100, status: 1 })
   const [r1, r2] = await Promise.all([p1, p2])
-  pendingList.value = r1.data.records || []
-  publishedList.value = r2.data.records || []
+  pendingList.value = r1.records || []
+  publishedList.value = r2.records || []
 }
 
 const audit = async (id, status) => {

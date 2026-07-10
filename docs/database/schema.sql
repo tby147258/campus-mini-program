@@ -14,6 +14,15 @@ CREATE DATABASE IF NOT EXISTS campus
 USE campus;
 
 -- ============================================================
+-- 创建专用应用账号（生产环境推荐）
+-- 本地开发可使用 root 账号，生产环境务必创建专用账号并限制权限
+-- ============================================================
+-- 示例：
+--   CREATE USER 'campus_app'@'localhost' IDENTIFIED BY 'your_strong_password';
+--   GRANT SELECT, INSERT, UPDATE, DELETE ON campus.* TO 'campus_app'@'localhost';
+--   FLUSH PRIVILEGES;
+
+-- ============================================================
 -- 1. 用户表 (user)
 --    存储学生和管理员用户信息
 -- ============================================================

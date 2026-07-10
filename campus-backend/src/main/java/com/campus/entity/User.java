@@ -3,35 +3,70 @@ package com.campus.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.campus.enums.UserRole;
 import com.campus.enums.UserStatus;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-@TableName("user")
+@TableName(value = "user")
 public class User {
     @TableId(type = IdType.AUTO)
     private Long id;
+
+    /** 微信OpenId */
     @TableField(value = "open_id")
     private String openId;
+
+    /** 邮箱 */
+    @TableField(value = "email")
+    @Size(max = 128, message = "邮箱长度不能超过128个字符")
     private String email;
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private String password;    // BCrypt加密，仅管理员使用
+
+    /** 密码（BCrypt加密） */
+    @TableField(value = "password")
+    private String password;
+
+    /** 昵称 */
+    @TableField(value = "nickname")
     private String nickname;
+
+    /** 头像URL */
+    @TableField(value = "avatar")
     private String avatar;
+
+    /** 手机号 */
+    @TableField(value = "phone")
+    private String phone;
+
+    /** 学号 */
     @TableField(value = "student_no")
     private String studentNo;
-    private String phone;
-    private UserRole role;       // 角色：STUDENT-学生, ADMIN-管理员
-    private UserStatus status;   // 状态：NORMAL-正常, DISABLED-禁用
 
-    @TableField(fill = FieldFill.INSERT)
+    /** 角色（0=学生，1=管理员） */
+    @TableField(value = "role")
+    private UserRole role;
+
+    /** 状态（0=正常，1=禁用） */
+    @TableField(value = "status")
+    private UserStatus status;
+
+    /** 逻辑删除标识 */
+    @TableLogic
+    @TableField(value = "is_deleted")
+    private Integer isDeleted;
+
+    /** 创建时间 */
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
-    @TableField(fill = FieldFill.INSERT_UPDATE)
+    /** 更新时间 */
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
-
-    @TableLogic
-    private Integer isDeleted;
 }

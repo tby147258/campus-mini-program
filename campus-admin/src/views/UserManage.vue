@@ -15,11 +15,40 @@
         </template>
       </el-table-column>
       <el-table-column prop="createdAt" label="注册时间" width="160" />
+      <el-table-column label="操作" width="100" fixed="right">
+        <template #default="{ row }">
+          <el-popconfirm title="确定删除该用户吗？" @confirm="handleDelete(row)">
+            <template #reference>
+              <el-button type="danger" size="small">删除</el-button>
+            </template>
+          </el-popconfirm>
+        </template>
+      </el-table-column>
     </el-table>
   </el-card>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { userApi } from '../api'
+
 const list = ref([])
+
+const loadList = async () => {
+  const res = await userApi.page({ page: 1, size: 100 })
+  list.value = res.records || []
+}
+
+const handleDelete = async (row) => {
+  try {
+    await userApi.del(row.id)
+    ElMessage.success('删除成功')
+    loadList()
+  } catch (e) {
+    ElMessage.error(e.msg || e.message || '删除失败')
+  }
+}
+
+onMounted(loadList)
 </script>

@@ -38,7 +38,7 @@ const form = ref({ title: '', category: '教务通知', content: '' })
 onMounted(async () => {
   if (isEdit.value) {
     const res = await announcementApi.getById(route.params.id)
-    form.value = res.data
+    form.value = res
   }
 })
 

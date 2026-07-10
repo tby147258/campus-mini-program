@@ -11,8 +11,18 @@
     </view>
 
     <view class="form-item">
-      <text class="form-label">报修地点</text>
-      <input class="form-input" placeholder="请输入具体地点（如：3号宿舍楼201室）" value="{{form.location}}" bindinput="onFieldChange" data-field="location" />
+      <text class="form-label">校区</text>
+      <input class="form-input" placeholder="如：校本部、北校区" value="{{form.campus}}" bindinput="onFieldChange" data-field="campus" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">楼栋</text>
+      <input class="form-input" placeholder="如：3号宿舍楼" value="{{form.building}}" bindinput="onFieldChange" data-field="building" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">房间号</text>
+      <input class="form-input" placeholder="如：201室" value="{{form.room}}" bindinput="onFieldChange" data-field="room" />
     </view>
 
     <view class="form-item">
@@ -35,8 +45,13 @@
     </view>
 
     <view class="form-item">
-      <text class="form-label">联系方式</text>
-      <input class="form-input" placeholder="请输入手机号" value="{{form.contact}}" bindinput="onFieldChange" data-field="contact" />
+      <text class="form-label">联系人</text>
+      <input class="form-input" placeholder="请输入联系人姓名" value="{{form.contactPerson}}" bindinput="onFieldChange" data-field="contactPerson" />
+    </view>
+
+    <view class="form-item">
+      <text class="form-label">联系电话</text>
+      <input class="form-input" placeholder="请输入手机号" value="{{form.contactPhone}}" bindinput="onFieldChange" data-field="contactPhone" />
     </view>
 
     <button class="submit-btn" bindtap="submitRepair" loading="{{submitting}}">提交报修</button>
@@ -63,7 +78,7 @@
         </view>
         <view class="info-row">
           <text class="info-label">地点</text>
-          <text class="info-value">{{order.location}}</text>
+          <text class="info-value">{{order.campus}} {{order.building}} {{order.room}}</text>
         </view>
         <view class="info-row">
           <text class="info-label">提交时间</text>

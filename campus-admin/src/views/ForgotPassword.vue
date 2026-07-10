@@ -92,7 +92,7 @@ export default {
         this.$message.success('验证码已发送（请查看后端控制台输出）')
         this.step = 2
       } catch (e) {
-        this.$message.error(e.response?.data?.msg || '发送失败')
+        this.$message.error(e.msg || e.message || '发送失败')
       }
       this.sending = false
     },
@@ -111,7 +111,7 @@ export default {
         this.$message.success('密码重置成功')
         this.resetDone = true
       } catch (e) {
-        this.$message.error(e.response?.data?.msg || '重置失败')
+        this.$message.error(e.msg || e.message || '重置失败')
       }
       this.resetting = false
     }

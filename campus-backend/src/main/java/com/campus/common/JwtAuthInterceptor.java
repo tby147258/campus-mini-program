@@ -13,8 +13,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.Map;
+import org.springframework.core.annotation.AnnotationUtils;
 
+@SuppressWarnings("null")
 @Component
 public class JwtAuthInterceptor implements HandlerInterceptor {
 
@@ -47,17 +48,30 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 2. 解析方法注解信息
+        // 2. 解析方法+类级别注解信息
         boolean hasNoAuth = false;
         boolean hasRoleRequired = false;
         int requiredRole = 0;
 
         if (handler instanceof HandlerMethod hm) {
-            hasNoAuth = hm.getMethodAnnotation(NoAuth.class) != null;
+            // 方法注解优先，方法没有则查找类注解
+            NoAuth noAuth = hm.getMethodAnnotation(NoAuth.class);
+            if (noAuth != null) {
+                hasNoAuth = true;
+            } else {
+                hasNoAuth = AnnotationUtils.findAnnotation(hm.getBeanType(), NoAuth.class) != null;
+            }
+
             RoleRequired rr = hm.getMethodAnnotation(RoleRequired.class);
             if (rr != null) {
                 hasRoleRequired = true;
                 requiredRole = rr.value();
+            } else {
+                RoleRequired rrClass = AnnotationUtils.findAnnotation(hm.getBeanType(), RoleRequired.class);
+                if (rrClass != null) {
+                    hasRoleRequired = true;
+                    requiredRole = rrClass.value();
+                }
             }
         }
 
@@ -84,12 +98,15 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
                 UserContext.set(userId, role);
             } catch (io.jsonwebtoken.ExpiredJwtException e) {
                 writeJson(response, 401, "Token已过期，请重新登录");
+                UserContext.clear();
                 return false;
             } catch (io.jsonwebtoken.security.SecurityException e) {
                 writeJson(response, 401, "Token签名无效");
+                UserContext.clear();
                 return false;
             } catch (Exception e) {
                 writeJson(response, 401, "Token无效或格式错误");
+                UserContext.clear();
                 return false;
             }
         }
@@ -99,6 +116,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             Integer role = (Integer) request.getAttribute("role");
             if (role == null) {
                 writeJson(response, 401, "未登录，请先登录");
+                UserContext.clear();
                 return false;
             }
         }
@@ -108,10 +126,12 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             Integer role = (Integer) request.getAttribute("role");
             if (role == null) {
                 writeJson(response, 401, "未登录，请先登录");
+                UserContext.clear();
                 return false;
             }
             if (role.intValue() < requiredRole) {
                 writeJson(response, 403, "无权访问，权限不足");
+                UserContext.clear();
                 return false;
             }
         }
@@ -120,10 +140,10 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
     }
 
     private void writeJson(HttpServletResponse response, int code, String msg) throws Exception {
+        Result<Void> result = Result.error(code, msg);
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(200);
-        response.getWriter().write(objectMapper.writeValueAsString(
-                Map.of("code", code, "msg", msg, "data", null)));
+        response.getWriter().write(objectMapper.writeValueAsString(result));
     }
 
     @Override

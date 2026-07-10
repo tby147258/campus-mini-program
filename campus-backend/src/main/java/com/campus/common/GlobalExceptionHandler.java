@@ -36,6 +36,7 @@ public class GlobalExceptionHandler {
      * 处理业务异常
      */
     @ExceptionHandler(BusinessException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleBusinessException(BusinessException e) {
         return Result.error(e.getCode(), e.getMessage());
     }
@@ -64,16 +65,37 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleIllegalArgument(IllegalArgumentException e) {
-        return Result.error(400, e.getMessage());
+        log.warn("参数错误: {}", e.getMessage());
+        return Result.error(400, "请求参数错误");
     }
 
     /**
-     * 兜底异常处理
+     * 处理空指针异常
+     */
+    @ExceptionHandler(NullPointerException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result<?> handleNullPointer(NullPointerException e) {
+        log.error("空指针异常", e);
+        return Result.error(500, "服务器内部错误");
+    }
+
+    /**
+     * 处理数字格式异常
+     */
+    @ExceptionHandler(NumberFormatException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<?> handleNumberFormat(NumberFormatException e) {
+        log.warn("数字格式错误: {}", e.getMessage());
+        return Result.error(400, "参数格式错误");
+    }
+
+    /**
+     * 兜底异常处理 — 不泄露内部错误信息
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<?> handleException(Exception e) {
         log.error("未处理的异常", e);
-        return Result.error(500, "服务器内部错误: " + e.getMessage());
+        return Result.error(500, "服务器内部错误");
     }
 }

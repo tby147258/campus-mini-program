@@ -82,7 +82,7 @@ const loadConfig = async () => {
   configLoading.value = true
   try {
     const res = await configApi.list()
-    configList.value = res.data || []
+    configList.value = res || []
   } finally {
     configLoading.value = false
   }

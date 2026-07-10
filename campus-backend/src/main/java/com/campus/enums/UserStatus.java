@@ -1,6 +1,8 @@
 package com.campus.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 /**
@@ -12,6 +14,7 @@ public enum UserStatus {
     DISABLED(1, "禁用");
 
     @EnumValue
+    @JsonValue
     private final Integer code;
     private final String desc;
 
@@ -20,6 +23,7 @@ public enum UserStatus {
         this.desc = desc;
     }
 
+    @JsonCreator
     public static UserStatus fromCode(Integer code) {
         for (UserStatus status : values()) {
             if (status.code.equals(code)) {

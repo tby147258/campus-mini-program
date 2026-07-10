@@ -9,6 +9,10 @@ public class UserContext {
     private static final ThreadLocal<Integer> currentRole = new ThreadLocal<>();
 
     public static void set(Long userId, Integer role) {
+        if (userId == null || role == null) {
+            clear();
+            return;
+        }
         currentUserId.set(userId);
         currentRole.set(role);
     }
@@ -24,5 +28,18 @@ public class UserContext {
     public static void clear() {
         currentUserId.remove();
         currentRole.remove();
+    }
+
+    /**
+     * 在异步/定时任务中手动设置上下文，配合 try-with-resources 自动清理：
+     * <pre>
+     * try (var ctx = UserContext.withContext(userId, role)) {
+     *     // 执行业务代码
+     * }
+     * </pre>
+     */
+    public static AutoCloseable withContext(Long userId, Integer role) {
+        set(userId, role);
+        return UserContext::clear;
     }
 }

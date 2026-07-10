@@ -18,6 +18,9 @@ import java.io.Serializable;
 @SuppressWarnings("null")
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+    /** open_id 数据库列最大长度 */
+    private static final int OPEN_ID_MAX_LENGTH = 64;
+
     @Override
     @Cacheable(value = "user", key = "#id")
     public User getById(Serializable id) {
@@ -35,7 +38,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (code == null || code.isBlank()) {
             throw new IllegalArgumentException("code 不能为空");
         }
+        // D18: code 长度校验，防止拼接后超长
+        if (code.length() > 48) {
+            throw new IllegalArgumentException("code 长度超限");
+        }
         String openId = "mock_openid_" + code;
+        if (openId.length() > OPEN_ID_MAX_LENGTH) {
+            throw new IllegalArgumentException("openId 生成超长");
+        }
         User user = getByOpenId(openId);
         if (user == null) {
             try {
@@ -66,15 +76,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class) // D4: 事务保护，配合缓存清除
     @CacheEvict(value = "user", key = "#entity.id") // US3: 更新时清除缓存
     public boolean updateById(User entity) {
+        if (entity == null || entity.getId() == null) {
+            throw new IllegalArgumentException("用户信息不能为空");
+        }
         // 更新时不清除密码，仅清除缓存
         return super.updateById(entity);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class) // D4: 事务保护，配合缓存清除
     @CacheEvict(value = "user", key = "#id") // US3: 删除时清除缓存
     public boolean removeById(Serializable id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID 不能为空");
+        }
         return super.removeById(id);
     }
 }

@@ -1,6 +1,8 @@
 package com.campus.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 /**
@@ -14,6 +16,7 @@ public enum LostFoundStatus {
     CLOSED(3, "已结束");
 
     @EnumValue
+    @JsonValue
     private final Integer code;
     private final String desc;
 
@@ -22,6 +25,7 @@ public enum LostFoundStatus {
         this.desc = desc;
     }
 
+    @JsonCreator
     public static LostFoundStatus fromCode(Integer code) {
         for (LostFoundStatus status : values()) {
             if (status.code.equals(code)) {

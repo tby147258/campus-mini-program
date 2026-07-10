@@ -32,8 +32,18 @@ public class CaptchaController {
     @PostMapping("/verify")
     @NoAuth
     public Result<?> verifyCaptcha(@RequestBody Map<String, Object> params) {
-        String token = (String) params.get("token");
-        int position = ((Number) params.get("position")).intValue();
+        // D14: 类型安全校验 — 防止 ClassCastException 和 NullPointerException
+        Object tokenObj = params.get("token");
+        if (!(tokenObj instanceof String token) || token.isBlank()) {
+            return Result.error(400, "验证码凭证不能为空");
+        }
+
+        Object positionObj = params.get("position");
+        if (!(positionObj instanceof Number positionNum)) {
+            return Result.error(400, "滑块位置参数缺失或无效");
+        }
+        int position = positionNum.intValue();
+
         return captchaService.verify(token, position);
     }
 }

@@ -43,70 +43,77 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { BarChart, PieChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
+import { statisticsApi } from '../api'
 
 use([BarChart, PieChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer])
 
-// 概览数据（可用实际API替换）
-const summaryCards = ref([
-  { label: '用户总数', value: 5 },
-  { label: '公告总数', value: 8 },
-  { label: '报修工单', value: 8 },
-  { label: '失物信息', value: 8 }
+const stats = ref({})
+
+const loadStats = async () => {
+  const res = await statisticsApi.get()
+  stats.value = res
+}
+
+const summaryCards = computed(() => [
+  { label: '用户总数', value: stats.value.userCount || 0 },
+  { label: '公告总数', value: stats.value.announcementCount || 0 },
+  { label: '报修工单', value: stats.value.repairOrderCount || 0 },
+  { label: '失物信息', value: stats.value.lostFoundCount || 0 }
 ])
 
-// 公告柱状图
 const announcementChartOption = computed(() => ({
   tooltip: { trigger: 'axis' },
   xAxis: { type: 'category', data: ['教务通知', '活动通知', '紧急通知'] },
   yAxis: { type: 'value' },
-  series: [{ type: 'bar', data: [4, 3, 1], itemStyle: { color: '#409eff' } }],
+  series: [{ type: 'bar', data: [stats.value.announcementCount || 0], itemStyle: { color: '#409eff' } }],
   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true }
 }))
 
-// 工单饼图
 const repairChartOption = computed(() => ({
   tooltip: { trigger: 'item' },
   series: [{
     type: 'pie', radius: ['40%', '70%'],
     data: [
-      { value: 3, name: '待处理', itemStyle: { color: '#f56c6c' } },
-      { value: 2, name: '处理中', itemStyle: { color: '#e6a23c' } },
-      { value: 3, name: '已完成', itemStyle: { color: '#67c23a' } }
+      { value: stats.value.repairPending || 0, name: '待处理', itemStyle: { color: '#f56c6c' } },
+      { value: stats.value.repairProcessing || 0, name: '处理中', itemStyle: { color: '#e6a23c' } },
+      { value: stats.value.repairCompleted || 0, name: '已完成', itemStyle: { color: '#67c23a' } },
+      { value: stats.value.repairRejected || 0, name: '已驳回', itemStyle: { color: '#909399' } }
     ],
     label: { formatter: '{b}: {c}' }
   }]
 }))
 
-// 失物招领饼图
 const lostFoundChartOption = computed(() => ({
   tooltip: { trigger: 'item' },
   series: [{
     type: 'pie', radius: ['40%', '70%'],
     data: [
-      { value: 6, name: '已发布', itemStyle: { color: '#67c23a' } },
-      { value: 2, name: '待审核', itemStyle: { color: '#e6a23c' } },
-      { value: 1, name: '未通过', itemStyle: { color: '#f56c6c' } }
+      { value: stats.value.lostFoundPublished || 0, name: '已发布', itemStyle: { color: '#67c23a' } },
+      { value: stats.value.lostFoundPending || 0, name: '待审核', itemStyle: { color: '#e6a23c' } },
+      { value: stats.value.lostFoundRejected || 0, name: '未通过', itemStyle: { color: '#f56c6c' } },
+      { value: stats.value.lostFoundClosed || 0, name: '已结束', itemStyle: { color: '#909399' } }
     ],
     label: { formatter: '{b}: {c}' }
   }]
 }))
 
-// 用户角色分布
 const userChartOption = computed(() => ({
   tooltip: { trigger: 'item' },
   series: [{
     type: 'pie',
     data: [
-      { value: 1, name: '管理员', itemStyle: { color: '#409eff' } },
-      { value: 4, name: '学生', itemStyle: { color: '#67c23a' } }
+      { value: stats.value.adminCount || 0, name: '管理员', itemStyle: { color: '#409eff' } },
+      { value: stats.value.studentCount || 0, name: '学生', itemStyle: { color: '#67c23a' } }
     ],
     label: { formatter: '{b}: {c}' }
   }]
 }))
+
+onMounted(loadStats)
 </script>

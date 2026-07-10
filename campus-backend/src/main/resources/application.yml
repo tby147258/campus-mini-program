@@ -3,12 +3,14 @@ server:
 
 spring:
   datasource:
+    # 生产环境请通过环境变量 MYSQL_USER / MYSQL_PASSWORD 注入
+    # 默认值仅用于本地开发，切勿在生产环境使用 root + 弱密码
     url: jdbc:mysql://localhost:3306/campus?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: 123456
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      minimum-idle: 10
+      minimum-idle: 5     # 开发环境 2~5 足够，生产环境根据并发调整
       maximum-pool-size: 50
 
   servlet:
@@ -16,13 +18,13 @@ spring:
       max-file-size: 5MB
       max-request-size: 20MB
 
-  # Redis配置
+  # Redis配置 — 生产环境必须设置密码并通过 REDIS_PASSWORD 环境变量注入
   data:
     redis:
-      host: localhost
+      host: 127.0.0.1     # 使用 IP 而非 localhost，避免 Windows 下 IPv6 解析歧义
       port: 6379
-      password:
-      timeout: 5000ms
+      password: ${REDIS_PASSWORD:}
+      timeout: 5s          # ISO-8601 Duration 格式（原 5000ms 亦可用，统一为 5s）
       lettuce:
         pool:
           max-active: 16
@@ -40,15 +42,19 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# JWT配置（JK1/JK2：密钥通过环境变量 JWT_SECRET 注入，优先于配置文件）
-# 生产环境务必在部署平台设置 JWT_SECRET 环境变量
+# JWT配置 — 密钥通过环境变量 JWT_SECRET 注入，生产环境必须覆盖
+# 警告：仓库中的默认密钥仅用于本地开发，生产环境请在部署平台设置 JWT_SECRET 环境变量
+# 密钥长度至少 32 字节（256 bits），满足 HS256 算法要求
 jwt:
   secret: ${JWT_SECRET:ab7f2f522096da54d08e5015b2cc17f2219954228f649fde3e911ad6be67f606}
   expiration: 86400  # 24小时
 
-# 和风天气API
+# 和风天气API — 请先到 https://devapi.qweather.com 注册获取 API Key
+# 生产环境通过 WEATHER_API_KEY 环境变量注入，避免明文提交到仓库
 weather:
-  api-key: your_heweather_api_key
+  api-key: ${WEATHER_API_KEY:your_heweather_api_key}
+  # 天气数据缓存时间（分钟），与 spring.cache.redis.time-to-live 共同决定缓存策略
+  # 该值控制 WeatherController 层的缓存 TTL
   cache-minutes: 30
 
 # 文件上传

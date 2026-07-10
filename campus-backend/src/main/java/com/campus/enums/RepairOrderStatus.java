@@ -1,6 +1,8 @@
 package com.campus.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 /**
@@ -14,6 +16,7 @@ public enum RepairOrderStatus {
     REJECTED(3, "已驳回");
 
     @EnumValue
+    @JsonValue
     private final Integer code;
     private final String desc;
 
@@ -22,6 +25,7 @@ public enum RepairOrderStatus {
         this.desc = desc;
     }
 
+    @JsonCreator
     public static RepairOrderStatus fromCode(Integer code) {
         for (RepairOrderStatus status : values()) {
             if (status.code.equals(code)) {

@@ -5,18 +5,52 @@ App({
     userInfo: null
   },
   onLaunch() {
-    // 登录
-    wx.login({
-      success: res => {
-        wx.request({
-          url: this.globalData.baseUrl + '/auth/wx-login',
-          method: 'POST',
-          data: { code: res.code },
-          success: (res) => {
-            this.globalData.token = res.data.data.token
-            this.globalData.userInfo = res.data.data.user
+    // 获取或生成本地设备标识，确保同一设备始终使用同一用户
+    let deviceId = wx.getStorageSync('deviceId')
+    if (!deviceId) {
+      deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)
+      wx.setStorageSync('deviceId', deviceId)
+    }
+
+    // 检查本地有无缓存的 token
+    const cachedToken = wx.getStorageSync('token')
+    if (cachedToken) {
+      // 尝试用缓存的 token 获取用户信息
+      this.globalData.token = cachedToken
+      wx.request({
+        url: this.globalData.baseUrl + '/auth/me',
+        method: 'GET',
+        header: { 'Authorization': 'Bearer ' + cachedToken },
+        success: (res) => {
+          if (res.data && res.data.code === 200) {
+            this.globalData.userInfo = res.data.data
+          } else {
+            // token 过期，重新登录
+            this.doLogin(deviceId)
           }
-        })
+        },
+        fail: () => {
+          // 网络异常，尝试重新登录
+          this.doLogin(deviceId)
+        }
+      })
+    } else {
+      // 首次启动，执行登录
+      this.doLogin(deviceId)
+    }
+  },
+
+  doLogin(deviceId) {
+    wx.request({
+      url: this.globalData.baseUrl + '/auth/wx-login',
+      method: 'POST',
+      data: { code: deviceId },
+      success: (res) => {
+        if (res.data && res.data.code === 200) {
+          this.globalData.token = res.data.data.token
+          this.globalData.userInfo = res.data.data.user
+          wx.setStorageSync('token', res.data.data.token)
+        }
       }
     })
   }

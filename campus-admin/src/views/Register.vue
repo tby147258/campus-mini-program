@@ -59,12 +59,12 @@ export default {
       this.loading = true
       try {
         const res = await authApi.register(this.form)
-        localStorage.setItem('token', res.data.token)
-        localStorage.setItem('user', JSON.stringify(res.data.user))
+        localStorage.setItem('token', res.token)
+        localStorage.setItem('user', JSON.stringify(res.user))
         this.$message.success('注册成功')
         this.$router.push('/')
       } catch (e) {
-        this.$message.error(e.response?.data?.msg || '注册失败')
+        this.$message.error(e.msg || e.message || '注册失败')
       }
       this.loading = false
     }

@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/auth")
-@SuppressWarnings("null")
 public class AuthController {
 
     private final UserService userService;
@@ -52,10 +51,13 @@ public class AuthController {
     /**
      * 微信小程序登录（模拟）
      */
-    @PostMapping("/wx-login")
     @NoAuth
+    @PostMapping("/wx-login")
     public Result<?> wxLogin(@RequestBody Map<String, String> params) {
         String code = params.get("code");
+        if (code == null || code.isBlank()) {
+            return Result.error(400, "登录凭证不能为空");
+        }
         User user = userService.loginOrRegister(code);
         String token = jwtUtil.generateToken(user.getId(), user.getRole());
         user.setPassword(null);
@@ -65,8 +67,8 @@ public class AuthController {
     /**
      * 管理员登录（含滑块验证码校验）
      */
-    @PostMapping("/admin-login")
     @NoAuth
+    @PostMapping("/admin-login")
     public Result<?> adminLogin(@Valid @RequestBody AdminLoginRequest request,
                                 HttpServletRequest httpRequest) {
         // 0. 校验滑块验证码 passToken（Redis 中验证）
@@ -117,8 +119,8 @@ public class AuthController {
     /**
      * 用户注册（学生端）
      */
-    @PostMapping("/register")
     @NoAuth
+    @PostMapping("/register")
     public Result<?> register(@Valid @RequestBody RegisterRequest request) {
         // 校验邮箱唯一性
         User exist = userService.lambdaQuery().eq(User::getEmail, request.getEmail()).one();
@@ -148,9 +150,16 @@ public class AuthController {
     /**
      * 发送重置密码验证码到邮箱
      */
-    @PostMapping("/forgot-password")
     @NoAuth
-    public Result<?> forgotPassword(@RequestParam String email) {
+    @PostMapping("/forgot-password")
+    public Result<?> forgotPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.isBlank()) {
+            return Result.error(400, "邮箱不能为空");
+        }
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            return Result.error(400, "邮箱格式不正确");
+        }
         User user = userService.lambdaQuery().eq(User::getEmail, email).one();
         if (user == null) {
             return Result.error(404, "该邮箱未注册");
@@ -170,8 +179,8 @@ public class AuthController {
     /**
      * 重置密码
      */
-    @PostMapping("/reset-password")
     @NoAuth
+    @PostMapping("/reset-password")
     public Result<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         // D8: 验证码校验传入场景标识
         boolean ok = captchaService.verifyEmailCode(request.getEmail(), "forgot-password", request.getCode());
@@ -199,6 +208,60 @@ public class AuthController {
         }
         user.setPassword(null);
         return Result.success(user);
+    }
+
+    /**
+     * 更新当前用户个人信息（微信小程序用户完善资料）
+     */
+    @PutMapping("/profile")
+    public Result<?> updateProfile(@RequestBody Map<String, String> body) {
+        Long userId = UserContext.getUserId();
+        if (userId == null) {
+            return Result.error(401, "未登录");
+        }
+        User user = userService.getById(userId);
+        if (user == null) {
+            return Result.error(404, "用户不存在");
+        }
+        String nickname = body.get("nickname");
+        String phone = body.get("phone");
+        String studentNo = body.get("studentNo");
+        if (nickname != null && !nickname.isBlank()) {
+            user.setNickname(nickname);
+        }
+        if (phone != null && !phone.isBlank()) {
+            user.setPhone(phone);
+        }
+        if (studentNo != null && !studentNo.isBlank()) {
+            user.setStudentNo(studentNo);
+        }
+        try {
+            userService.updateById(user);
+        } catch (Exception e) {
+            return Result.error(500, "更新用户信息失败: " + e.getMessage());
+        }
+        user.setPassword(null);
+        return Result.success(user);
+    }
+
+    /**
+     * 退出登录（服务端清除会话状态）
+     * 前端清除本地 token 后调用此接口，可用于后续扩展黑名单/Token 失效逻辑
+     */
+    @PostMapping("/logout")
+    public Result<?> logout() {
+        Long userId = UserContext.getUserId();
+        if (userId != null) {
+            OperationLog log = new OperationLog();
+            log.setUserId(userId);
+            log.setModule("auth");
+            log.setAction("logout");
+            log.setTargetId(userId);
+            log.setDescription("用户退出登录");
+            log.setCreatedAt(LocalDateTime.now());
+            operationLogService.save(log);
+        }
+        return Result.success(null);
     }
 
     private String getClientIp(HttpServletRequest request) {

@@ -31,7 +31,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const list = ref([])
 const loadList = async () => {
   const res = await announcementApi.list({ page: 1, size: 100 })
-  list.value = res.data.records || []
+  list.value = res.records || []
 }
 const handleDelete = async (id) => {
   await ElMessageBox.confirm('确认删除？')

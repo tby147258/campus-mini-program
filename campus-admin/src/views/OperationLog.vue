@@ -104,8 +104,8 @@ const loadData = async () => {
       if (!params[k] && params[k] !== 0 && params[k] !== false) delete params[k]
     })
     const res = await logApi.page(params)
-    list.value = res.data.records || []
-    total.value = res.data.total || 0
+    list.value = res.records || []
+    total.value = res.total || 0
   } finally {
     loading.value = false
   }

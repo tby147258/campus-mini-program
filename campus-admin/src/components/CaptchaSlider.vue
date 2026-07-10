@@ -1,148 +1,237 @@
 <template>
-  <div class="captcha-container" v-if="visible">
-    <div class="captcha-mask" @click="close"></div>
-    <div class="captcha-panel">
+  <div class="captcha-overlay" @click.self="$emit('close')">
+    <div class="captcha-modal">
       <div class="captcha-header">
-        <span>请完成安全验证</span>
-        <span class="close-btn" @click="close">✕</span>
+        <span>安全验证</span>
+        <span class="captcha-close" @click="$emit('close')">✕</span>
       </div>
       <div class="captcha-body">
-        <div class="captcha-bg-wrapper" ref="bgWrapper">
-          <img :src="captchaData.bgImage" class="captcha-bg" ref="bgImg" @load="onBgLoaded" />
-          <div class="puzzle-slot" :style="{ top: captchaData.puzzleY + 'px', left: '0px', width: '40px', height: '40px', background: 'rgba(255,255,255,0.3)' }"></div>
+        <div class="puzzle-wrapper">
+          <img :src="localImage" class="puzzle-bg" alt="背景图" />
         </div>
-        <div class="puzzle-piece-wrapper" ref="puzzleWrapper">
-          <img :src="captchaData.puzzleImage" class="puzzle-piece"
-            :style="{ left: puzzlePos + 'px', top: captchaData.puzzleY + 'px', position: 'absolute' }" />
-        </div>
-      </div>
-      <div class="captcha-slider-wrapper">
-        <div class="slider-track">
-          <div class="slider-fill" :style="{ width: sliderPercent + '%' }"></div>
-          <div class="slider-thumb" :style="{ left: sliderPercent + '%' }"
-            @mousedown="startDrag" @touchstart="startDrag"
-            :class="{ dragging: isDragging }">
-            →
+        <div class="slider-wrapper">
+          <div class="slider-track">
+            <div class="slider-progress" :style="{ width: sliderPercent + '%' }"></div>
+            <div class="slider-thumb" :style="{ left: sliderPercent + '%' }" @mousedown="onDragStart" @touchstart="onDragStart">
+              →
+            </div>
           </div>
         </div>
-      </div>
-      <div class="captcha-footer">
-        <span v-if="status === 'idle'" class="hint-text">拖动滑块完成拼图</span>
-        <span v-if="status === 'loading'" class="hint-text loading">验证中...</span>
-        <span v-if="status === 'success'" class="hint-text success">✓ 验证通过</span>
-        <span v-if="status === 'error'" class="hint-text error">验证失败，请重试</span>
+        <div class="captcha-status">
+          <span v-if="status === 'loading'">验证中...</span>
+          <span v-else-if="status === 'success'" style="color: #67c23a">验证通过 ✓</span>
+          <span v-else-if="status === 'error'" style="color: #f56c6c">
+            验证失败
+            <el-button type="text" style="margin-left: 8px" @click="loadCaptcha">点击重试</el-button>
+          </span>
+          <span v-else>请拖动滑块完成验证</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-import { captchaApi } from '../api/index.js'
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { captchaApi } from '@/api/index'
 
-export default {
-  name: 'CaptchaSlider',
-  props: {
-    visible: { type: Boolean, default: false }
-  },
-  emits: ['close', 'success'],
-  data() {
-    return {
-      captchaData: { bgImage: '', puzzleImage: '', token: '', puzzleY: 0 },
-      puzzlePos: 0,
-      sliderPercent: 0,
-      isDragging: false,
-      status: 'idle', // idle | loading | success | error
-      startX: 0
-    }
-  },
-  watch: {
-    visible(v) {
-      if (v) this.loadCaptcha()
-    }
-  },
-  methods: {
-    async loadCaptcha() {
-      try {
-        const res = await captchaApi.get()
-        this.captchaData = res.data
-        this.puzzlePos = 0
-        this.sliderPercent = 0
-        this.status = 'idle'
-      } catch (e) {
-        this.status = 'error'
-      }
-    },
-    onBgLoaded() {
-      // 背景图片加载后调整拼图位置
-    },
-    startDrag(e) {
-      this.isDragging = true
-      const clientX = e.clientX || e.touches[0].clientX
-      this.startX = clientX - (this.sliderPercent / 100) * 250
-      document.addEventListener('mousemove', this.onDrag)
-      document.addEventListener('mouseup', this.stopDrag)
-      document.addEventListener('touchmove', this.onDrag, { passive: true })
-      document.addEventListener('touchend', this.stopDrag)
-    },
-    onDrag(e) {
-      if (!this.isDragging) return
-      const clientX = e.clientX || (e.touches && e.touches[0].clientX)
-      if (!clientX) return
-      let diff = clientX - this.startX
-      diff = Math.max(0, Math.min(250, diff))
-      this.sliderPercent = (diff / 250) * 100
-      this.puzzlePos = diff
-    },
-    stopDrag() {
-      if (!this.isDragging) return
-      this.isDragging = false
-      document.removeEventListener('mousemove', this.onDrag)
-      document.removeEventListener('mouseup', this.stopDrag)
-      document.removeEventListener('touchmove', this.onDrag)
-      document.removeEventListener('touchend', this.stopDrag)
-      this.verify()
-    },
-    async verify() {
-      this.status = 'loading'
-      try {
-        const res = await captchaApi.verify(this.captchaData.token, Math.round(this.puzzlePos))
-        this.status = 'success'
-        setTimeout(() => {
-          this.$emit('success', res.data.passToken)
-          this.$emit('close')
-        }, 500)
-      } catch (e) {
-        this.status = 'error'
-        setTimeout(() => this.loadCaptcha(), 1000)
-      }
-    },
-    close() {
-      this.$emit('close')
-    }
+const props = defineProps({
+  visible: Boolean,
+  puzzleImage: String
+})
+
+const emit = defineEmits(['close', 'success'])
+
+const status = ref('pending')
+const sliderPercent = ref(0)
+// 内部管理图片和 token，不受父组件 prop 影响
+const localImage = ref('')
+const localToken = ref('')
+let puzzlePos = 0
+let isDragging = false
+let startX = 0
+let startLeft = 0
+
+// 组件挂载时自动加载验证码
+onMounted(() => {
+  loadCaptcha()
+})
+
+// D15: 组件销毁时清理全局事件监听
+onBeforeUnmount(() => {
+  if (isDragging) {
+    document.removeEventListener('mousemove', onDragMove)
+    document.removeEventListener('mouseup', onDragEnd)
+    document.removeEventListener('touchmove', onDragMoveTouch)
+    document.removeEventListener('touchend', onDragEnd)
+    isDragging = false
   }
+})
+
+function loadCaptcha() {
+  status.value = 'loading'
+  captchaApi.get()
+    .then(res => {
+      localImage.value = res.puzzleImage || res.image || ''
+      localToken.value = res.token || ''
+      status.value = 'pending'
+    })
+    .catch(() => {
+      status.value = 'error'
+    })
+}
+
+function onDragStart(e) {
+  isDragging = true
+  startX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX
+  startLeft = sliderPercent.value
+
+  document.addEventListener('mousemove', onDragMove)
+  document.addEventListener('mouseup', onDragEnd)
+  document.addEventListener('touchmove', onDragMoveTouch, { passive: false })
+  document.addEventListener('touchend', onDragEnd)
+}
+
+function onDragMove(e) {
+  if (!isDragging) return
+  const currentX = e.clientX
+  const diff = currentX - startX
+  const trackWidth = 280 // 滑块轨道宽度
+  let percent = (startLeft / 100 * trackWidth + diff) / trackWidth * 100
+  percent = Math.max(0, Math.min(100, percent))
+  sliderPercent.value = percent
+}
+
+function onDragMoveTouch(e) {
+  if (!isDragging) return
+  e.preventDefault()
+  const currentX = e.touches[0].clientX
+  const diff = currentX - startX
+  const trackWidth = 280
+  let percent = (startLeft / 100 * trackWidth + diff) / trackWidth * 100
+  percent = Math.max(0, Math.min(100, percent))
+  sliderPercent.value = percent
+}
+
+function onDragEnd() {
+  if (!isDragging) return
+  isDragging = false
+
+  document.removeEventListener('mousemove', onDragMove)
+  document.removeEventListener('mouseup', onDragEnd)
+  document.removeEventListener('touchmove', onDragMoveTouch)
+  document.removeEventListener('touchend', onDragEnd)
+
+  puzzlePos = sliderPercent.value
+  verify()
+}
+
+function verify() {
+  status.value = 'loading'
+  captchaApi.verify({
+    token: localToken.value,
+    position: Math.round(puzzlePos)
+  })
+    .then(res => {
+      if (res && res.passToken) {
+        status.value = 'success'
+        // 把 passToken 传给父组件，用于登录接口
+        emit('success', res.passToken)
+      } else {
+        status.value = 'error'
+      }
+    })
+    .catch(() => {
+      status.value = 'error'
+    })
 }
 </script>
 
 <style scoped>
-.captcha-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; justify-content: center; align-items: center; }
-.captcha-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); }
-.captcha-panel { position: relative; background: #fff; border-radius: 8px; width: 320px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); overflow: hidden; }
-.captcha-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; font-size: 15px; border-bottom: 1px solid #eee; }
-.close-btn { cursor: pointer; color: #999; font-size: 18px; }
-.captcha-body { padding: 16px; }
-.captcha-bg-wrapper { position: relative; width: 280px; height: 150px; margin: 0 auto; }
-.captcha-bg { width: 100%; height: 100%; display: block; border-radius: 4px; }
-.puzzle-slot { position: absolute; }
-.puzzle-piece-wrapper { position: relative; width: 280px; height: 0; margin: 0 auto; }
-.puzzle-piece { width: 40px; height: 40px; }
-.captcha-slider-wrapper { padding: 0 16px 8px; }
-.slider-track { position: relative; width: 250px; height: 40px; background: #f0f0f0; border-radius: 20px; margin: 0 auto; }
-.slider-fill { position: absolute; left: 0; top: 0; height: 100%; background: #7ac23c; border-radius: 20px 0 0 20px; transition: none; }
-.slider-thumb { position: absolute; top: -4px; width: 48px; height: 48px; background: #fff; border: 2px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: grab; font-size: 18px; color: #666; box-shadow: 0 2px 6px rgba(0,0,0,0.15); margin-left: -24px; transition: none; user-select: none; }
-.slider-thumb.dragging { cursor: grabbing; border-color: #409eff; }
-.captcha-footer { text-align: center; padding: 0 16px 12px; font-size: 13px; }
-.hint-text { color: #999; }
-.hint-text.loading { color: #409eff; }
-.hint-text.success { color: #67c23a; }
-.hint-text.error { color: #f56c6c; }
+.captcha-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+.captcha-modal {
+  width: 340px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+.captcha-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+  font-weight: 500;
+}
+.captcha-close {
+  cursor: pointer;
+  color: #999;
+  font-size: 18px;
+}
+.captcha-body {
+  padding: 16px;
+}
+.puzzle-wrapper {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+.puzzle-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.slider-wrapper {
+  margin-bottom: 12px;
+}
+.slider-track {
+  position: relative;
+  height: 40px;
+  background: #e8e8e8;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.slider-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #67c23a, #85ce61);
+  border-radius: 20px;
+  transition: width 0.1s;
+}
+.slider-thumb {
+  position: absolute;
+  top: 2px;
+  width: 36px;
+  height: 36px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  color: #666;
+  margin-left: -18px;
+}
+.captcha-status {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
 </style>

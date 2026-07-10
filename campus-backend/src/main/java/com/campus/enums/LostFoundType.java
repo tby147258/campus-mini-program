@@ -1,6 +1,8 @@
 package com.campus.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 /**
@@ -12,6 +14,7 @@ public enum LostFoundType {
     LOOKING(1, "寻物启事");
 
     @EnumValue
+    @JsonValue
     private final Integer code;
     private final String desc;
 
@@ -20,6 +23,7 @@ public enum LostFoundType {
         this.desc = desc;
     }
 
+    @JsonCreator
     public static LostFoundType fromCode(Integer code) {
         for (LostFoundType type : values()) {
             if (type.code.equals(code)) {

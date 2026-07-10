@@ -1,70 +1,57 @@
-<view class="container">
+<view class="page profile-page">
   <!-- 用户信息卡片 -->
   <view class="user-card">
     <view class="avatar-wrap">
       <image class="avatar" src="{{userInfo.avatarUrl || '/images/default_avatar.png'}}" mode="aspectFill" />
     </view>
     <view class="user-info">
-      <text class="nickname">{{userInfo.nickName || userInfo.nickname || '未登录'}}</text>
+      <text class="nickname">{{userInfo.nickname || '未登录'}}</text>
       <text class="user-desc">欢迎使用校园综合服务</text>
+    </view>
+    <!-- 未登录时显示登录按钮 -->
+    <view class="login-btn" wx:if="{{!userInfo.id}}" bindtap="login">
+      <text>登录</text>
     </view>
   </view>
 
-  <!-- 功能菜单列表 -->
-  <view class="menu-group">
+  <!-- 已登录但信息不完整时显示完善资料表单 -->
+  <view class="profile-form" wx:if="{{userInfo.id && !userInfo.nickname}}">
+    <view class="form-title">完善个人信息</view>
+    <view class="form-item">
+      <text class="form-label">昵称</text>
+      <input class="form-input" placeholder="请输入昵称" value="{{editForm.nickname}}" bindinput="onNicknameInput" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">手机号</text>
+      <input class="form-input" placeholder="请输入手机号" type="number" maxlength="11" value="{{editForm.phone}}" bindinput="onPhoneInput" />
+    </view>
+    <view class="form-item">
+      <text class="form-label">学号</text>
+      <input class="form-input" placeholder="请输入学号" value="{{editForm.studentNo}}" bindinput="onStudentNoInput" />
+    </view>
+    <button class="submit-btn" bindtap="submitProfile" loading="{{submitting}}">保存资料</button>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-list" wx:if="{{!userInfo.id || userInfo.nickname}}">
     <view class="menu-item" bindtap="goMyPosts">
-      <text class="menu-icon menu-icon-posts">📋</text>
-      <text class="menu-text">我的发布</text>
-      <text class="menu-arrow">›</text>
+      <text>我的发布</text>
+      <text class="arrow">›</text>
     </view>
     <view class="menu-item" bindtap="goMyRepairs">
-      <text class="menu-icon menu-icon-repair">🔧</text>
-      <text class="menu-text">我的报修</text>
-      <text class="menu-arrow">›</text>
+      <text>我的报修</text>
+      <text class="arrow">›</text>
     </view>
     <view class="menu-item" bindtap="goFeedback">
-      <text class="menu-icon menu-icon-feedback">💬</text>
-      <text class="menu-text">意见反馈</text>
-      <text class="menu-arrow">›</text>
+      <text>意见反馈</text>
+      <text class="arrow">›</text>
     </view>
     <view class="menu-item" bindtap="goAbout">
-      <text class="menu-icon menu-icon-about">ℹ️</text>
-      <text class="menu-text">关于我们</text>
-      <text class="menu-arrow">›</text>
+      <text>关于我们</text>
+      <text class="arrow">›</text>
     </view>
   </view>
 
   <!-- 退出登录 -->
-  <view class="logout-btn" bindtap="logout">
-    <text>退出登录</text>
-  </view>
-
-  <!-- 我的发布弹窗 -->
-  <view class="modal-overlay" wx:if="{{showPosts}}" bindtap="hidePosts">
-    <view class="modal-content" catchtap="">
-      <view class="modal-header">
-        <text class="modal-title">我的发布</text>
-        <text class="modal-close" bindtap="hidePosts">×</text>
-      </view>
-      <view class="modal-body">
-        <view wx:if="{{myPosts.length > 0}}">
-          <view class="post-item" wx:for="{{myPosts}}" wx:key="id" bindtap="goPostDetail" data-id="{{item.id}}">
-            <view class="post-header">
-              <text class="post-name">{{item.itemName}}</text>
-              <text class="post-status status-{{item.status}}">
-                <text wx:if="{{item.status === 0}}">待审核</text>
-                <text wx:elif="{{item.status === 1}}">已发布</text>
-                <text wx:elif="{{item.status === 2}}">已驳回</text>
-                <text wx:else>已关闭</text>
-              </text>
-            </view>
-            <text class="post-time">{{item.createdAt}}</text>
-          </view>
-        </view>
-        <view wx:else class="empty-in-modal">
-          <text>暂无发布记录</text>
-        </view>
-      </view>
-    </view>
-  </view>
+  <button class="logout-btn" wx:if="{{userInfo.id}}" bindtap="logout">退出登录</button>
 </view>

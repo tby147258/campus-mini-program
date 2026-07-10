@@ -1,10 +1,10 @@
-const { request } = require('../../utils/request')
+const request = require('../../utils/request')
 
 Page({
   data: {
     userInfo: {},
-    myPosts: [],
-    showPosts: false
+    editForm: { nickname: '', phone: '', studentNo: '' },
+    submitting: false
   },
 
   onShow() {
@@ -14,66 +14,111 @@ Page({
     })
   },
 
-  goMyPosts() {
-    wx.showLoading({ title: '加载中...' })
-    request({
-      url: '/lost-found',
-      showLoading: false
-    }).then(data => {
-      const records = data.records || data || []
-      const app = getApp()
-      const userId = app.globalData.userInfo ? app.globalData.userInfo.id : null
-      const myPosts = records.filter(item => item.userId === userId)
-      this.setData({ myPosts, showPosts: true })
-      wx.hideLoading()
-    }).catch(() => {
-      wx.hideLoading()
-      wx.showToast({ title: '加载失败', icon: 'none' })
-    })
-  },
-
-  goMyRepairs() {
-    wx.switchTab({ url: '/pages/repair/index' })
-  },
-
-  goPostDetail(e) {
-    const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: '/pages/lostfound/detail?id=' + id })
-  },
-
-  hidePosts() {
-    this.setData({ showPosts: false })
-  },
-
-  goFeedback() {
-    wx.showModal({
-      title: '意见反馈',
-      content: '如有任何问题或建议，请联系校园服务中心。\n电话：010-88888888\n邮箱：service@campus.edu',
-      showCancel: false
-    })
-  },
-
-  goAbout() {
-    wx.showModal({
-      title: '关于我们',
-      content: '校园综合服务小程序 v1.0.0\n\n为师生提供便捷的校园生活服务，包括失物招领、报修中心、校园公告等功能。',
-      showCancel: false
-    })
-  },
-
-  logout() {
-    wx.showModal({
-      title: '退出登录',
-      content: '确定要退出登录吗？',
+  // 手动登录（当 app.js 自动登录失败时，用户可点击登录按钮重试）
+  login() {
+    const app = getApp()
+    const deviceId = wx.getStorageSync('deviceId')
+    wx.showLoading({ title: '登录中...' })
+    wx.request({
+      url: app.globalData.baseUrl + '/auth/wx-login',
+      method: 'POST',
+      data: { code: deviceId },
       success: (res) => {
-        if (res.confirm) {
-          const app = getApp()
-          app.globalData.token = ''
-          app.globalData.userInfo = null
-          this.setData({ userInfo: {} })
-          wx.showToast({ title: '已退出' })
+        wx.hideLoading()
+        if (res.data && res.data.code === 200) {
+          app.globalData.token = res.data.data.token
+          app.globalData.userInfo = res.data.data.user
+          wx.setStorageSync('token', res.data.data.token)
+          this.setData({ userInfo: res.data.data.user })
+          wx.showToast({ title: '登录成功' })
+        } else {
+          wx.showToast({ title: res.data.msg || '登录失败', icon: 'none' })
         }
+      },
+      fail: () => {
+        wx.hideLoading()
+        wx.showToast({ title: '网络异常，请重试', icon: 'none' })
       }
     })
+  },
+
+  // 表单输入
+  onNicknameInput(e) {
+    this.setData({ 'editForm.nickname': e.detail.value })
+  },
+  onPhoneInput(e) {
+    this.setData({ 'editForm.phone': e.detail.value })
+  },
+  onStudentNoInput(e) {
+    this.setData({ 'editForm.studentNo': e.detail.value })
+  },
+
+  // 提交完善资料
+  async submitProfile() {
+    const { nickname, phone } = this.data.editForm
+    if (!nickname || !nickname.trim()) {
+      wx.showToast({ title: '请输入昵称', icon: 'none' })
+      return
+    }
+    if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
+      wx.showToast({ title: '手机号格式不正确', icon: 'none' })
+      return
+    }
+    this.setData({ submitting: true })
+    try {
+      const res = await request.put('/auth/profile', this.data.editForm)
+      const app = getApp()
+      app.globalData.userInfo = res
+      this.setData({ userInfo: res })
+      wx.showToast({ title: '保存成功' })
+    } catch (e) {
+      wx.showToast({ title: e.msg || e.message || '保存失败', icon: 'none' })
+    } finally {
+      this.setData({ submitting: false })
+    }
+  },
+
+  // 我的发布
+  goMyPosts() {
+    const app = getApp()
+    const userId = app.globalData.userInfo?.id
+    if (!userId) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    wx.navigateTo({ url: '/pages/lostfound/index?userId=' + userId })
+  },
+
+  // 我的报修
+  goMyRepairs() {
+    const app = getApp()
+    if (!app.globalData.userInfo?.id) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    wx.navigateTo({ url: '/pages/repair/index' })
+  },
+
+  // 意见反馈
+  goFeedback() {
+    wx.showToast({ title: '功能开发中', icon: 'none' })
+  },
+
+  // 关于我们
+  goAbout() {
+    wx.showToast({ title: '校园综合服务平台 v1.0', icon: 'none' })
+  },
+
+  // 退出登录
+  logout() {
+    const app = getApp()
+    // 通知服务端
+    request.post('/auth/logout').catch(() => {})
+    // 清除本地
+    app.globalData.token = ''
+    app.globalData.userInfo = null
+    wx.removeStorageSync('token')
+    this.setData({ userInfo: {} })
+    wx.showToast({ title: '已退出登录' })
   }
 })

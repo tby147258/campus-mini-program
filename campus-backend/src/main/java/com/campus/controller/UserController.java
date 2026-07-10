@@ -6,15 +6,18 @@ import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
 import com.campus.common.UserContext;
 import com.campus.dto.CreateUserRequest;
+import com.campus.entity.OperationLog;
 import com.campus.entity.User;
 import com.campus.enums.UserRole;
 import com.campus.enums.UserStatus;
+import com.campus.service.OperationLogService;
 import com.campus.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,16 +30,19 @@ public class UserController {
 
     private final UserService userService;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final OperationLogService operationLogService;
 
-    public UserController(UserService userService, BCryptPasswordEncoder passwordEncoder) {
+    public UserController(UserService userService, BCryptPasswordEncoder passwordEncoder,
+                          OperationLogService operationLogService) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.operationLogService = operationLogService;
     }
 
     /**
      * 分页列表 - 支持角色筛选、状态筛选、关键字模糊搜索(nickname/phone/student_no)
      */
-    @GetMapping("/page")
+    @GetMapping
     public Result<?> page(@RequestParam(defaultValue = "1") int page,
                           @RequestParam(defaultValue = "10") int size,
                           @RequestParam(required = false) Integer role,
@@ -73,6 +79,16 @@ public class UserController {
      */
     @PostMapping
     public Result<?> create(@Valid @RequestBody CreateUserRequest req) {
+        // D21: 检查邮箱唯一性
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            long emailCount = userService.lambdaQuery()
+                    .eq(User::getEmail, req.getEmail())
+                    .count();
+            if (emailCount > 0) {
+                return Result.error(400, "该邮箱已被使用");
+            }
+        }
+
         // 检查手机号唯一性
         if (req.getPhone() != null && !req.getPhone().isBlank()) {
             long count = userService.lambdaQuery()
@@ -99,10 +115,9 @@ public class UserController {
 
         userService.save(user);
 
-        // 操作日志
-        Long operatorId = UserContext.getUserId();
-        System.out.printf("[USER_CREATE] operator=%d, target=%d, role=%d%n",
-                operatorId, user.getId(), user.getRole());
+        // D12: 持久化操作日志（替代 System.out.printf）
+        saveOperationLog("user", "create", user.getId(),
+                "创建用户: " + user.getNickname());
 
         // 返回时不包含密码（@JsonIgnore已处理，此处再确保置空）
         user.setPassword(null);
@@ -138,8 +153,8 @@ public class UserController {
 
         userService.updateById(user);
 
-        Long operatorId = UserContext.getUserId();
-        System.out.printf("[USER_UPDATE] operator=%d, target=%d%n", operatorId, id);
+        saveOperationLog("user", "update", id,
+                "更新用户信息");
 
         user.setPassword(null);
         return Result.success(user);
@@ -151,6 +166,9 @@ public class UserController {
     @PutMapping("/{id}/status")
     public Result<?> updateStatus(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
         Integer statusCode = body.get("status");
+        if (statusCode == null) {
+            return Result.error(400, "状态值不能为空");
+        }
         UserStatus status = UserStatus.fromCode(statusCode);
         if (status == null) {
             return Result.error(400, "状态值无效，应为0(启用)或1(禁用)");
@@ -166,54 +184,55 @@ public class UserController {
                 .set(User::getStatus, status)
                 .update();
 
-        Long operatorId = UserContext.getUserId();
-        System.out.printf("[USER_STATUS] operator=%d, target=%d, status=%d%n",
-                operatorId, id, status.getCode());
+        saveOperationLog("user", "update_status", id,
+                "修改用户状态为: " + status.getDesc());
 
         return Result.success(Map.of("id", id, "status", status.getCode()));
     }
 
     /**
-     * 重置密码 - 生成随机密码并BCrypt加密
+     * 重置密码 - 生成随机密码并BCrypt加密，或管理员指定新密码
      */
     @PutMapping("/{id}/password")
-    public Result<?> resetPassword(@PathVariable Long id) {
+    public Result<?> resetOrChangePassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
         User user = userService.getById(id);
         if (user == null) {
             return Result.error(404, "用户不存在");
         }
 
-        // 生成8位随机密码
-        String newPassword = generateRandomPassword(8);
-        String encoded = passwordEncoder.encode(newPassword);
-
-        userService.lambdaUpdate()
-                .eq(User::getId, id)
-                .set(User::getPassword, encoded)
-                .update();
-
-        Long operatorId = UserContext.getUserId();
-        System.out.printf("[USER_PASSWORD_RESET] operator=%d, target=%d%n", operatorId, id);
-
-        // 返回新密码（仅此一次可见）
-        return Result.success(Map.of("id", id, "newPassword", newPassword));
-    }
-
-    /**
-     * 修改密码 - 用户指定新密码
-     */
-    @PutMapping("/{id}/change-password")
-    public Result<?> changePassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String newPassword = body.get("password");
-        if (newPassword == null || newPassword.length() < 6) {
-            return Result.error(400, "密码至少6位");
+        if (newPassword != null && !newPassword.isBlank()) {
+            // 管理员指定密码模式
+            if (newPassword.length() < 6) {
+                return Result.error(400, "密码至少6位");
+            }
+            String encoded = passwordEncoder.encode(newPassword);
+            userService.lambdaUpdate()
+                    .eq(User::getId, id)
+                    .set(User::getPassword, encoded)
+                    .update();
+
+            saveOperationLog("user", "change_password", id,
+                    "管理员修改用户密码");
+
+            // D27: 返回结构化数据（与 resetPassword 统一风格）
+            return Result.success(Map.of("id", id, "message", "密码修改成功"));
+        } else {
+            // 自动生成随机密码模式（原 resetPassword）
+            newPassword = generateRandomPassword(8);
+            String encoded = passwordEncoder.encode(newPassword);
+
+            userService.lambdaUpdate()
+                    .eq(User::getId, id)
+                    .set(User::getPassword, encoded)
+                    .update();
+
+            saveOperationLog("user", "reset_password", id,
+                    "管理员重置用户密码");
+
+            // 返回新密码（仅此一次可见）
+            return Result.success(Map.of("id", id, "newPassword", newPassword));
         }
-        String encoded = passwordEncoder.encode(newPassword);
-        userService.lambdaUpdate()
-                .eq(User::getId, id)
-                .set(User::getPassword, encoded)
-                .update();
-        return Result.success("密码修改成功");
     }
 
     /**
@@ -228,8 +247,8 @@ public class UserController {
 
         userService.removeById(id);
 
-        Long operatorId = UserContext.getUserId();
-        System.out.printf("[USER_DELETE] operator=%d, target=%d%n", operatorId, id);
+        saveOperationLog("user", "delete", id,
+                "删除用户: " + user.getNickname());
 
         return Result.success(null);
     }
@@ -237,7 +256,7 @@ public class UserController {
     /**
      * 批量删除（逻辑删除）
      */
-    @DeleteMapping("/batch")
+    @PostMapping("/batch-delete")
     public Result<?> deleteBatch(@RequestBody List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             return Result.error(400, "请选择要删除的用户");
@@ -245,11 +264,28 @@ public class UserController {
 
         userService.removeByIds(ids);
 
-        Long operatorId = UserContext.getUserId();
-        System.out.printf("[USER_BATCH_DELETE] operator=%d, targets=%s, count=%d%n",
-                operatorId, ids, ids.size());
+        saveOperationLog("user", "batch_delete", null,
+                "批量删除用户，数量: " + ids.size());
 
         return Result.success(Map.of("deleted", ids.size()));
+    }
+
+    // ======== 私有辅助方法 ========
+
+    /**
+     * 保存操作日志（D12: 替代 System.out.printf）
+     */
+    private void saveOperationLog(String module, String action, Long targetId, String description) {
+        Long operatorId = UserContext.getUserId();
+        OperationLog log = new OperationLog();
+        log.setUserId(operatorId);
+        log.setModule(module);
+        log.setAction(action);
+        log.setTargetId(targetId);
+        log.setDescription(description);
+        log.setIpAddress(null); // 可后续扩展获取IP
+        log.setCreatedAt(LocalDateTime.now());
+        operationLogService.save(log);
     }
 
     /**
