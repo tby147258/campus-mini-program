@@ -8,6 +8,7 @@
       <div class="captcha-body">
         <div class="puzzle-wrapper">
           <img :src="localImage" class="puzzle-bg" alt="背景图" />
+          <img :src="puzzleImage" class="puzzle-piece" :style="puzzleStyle" alt="拼图块" />
         </div>
         <div class="slider-wrapper">
           <div class="slider-track">
@@ -32,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { captchaApi } from '@/api/index'
 
 const props = defineProps({
@@ -46,8 +47,16 @@ const status = ref('pending')
 const sliderPercent = ref(0)
 // 内部管理图片和 token，不受父组件 prop 影响
 const localImage = ref('')
+const puzzleImage = ref('')
+const puzzleY = ref(0)
 const localToken = ref('')
 let puzzlePos = 0
+// 拼图块位置：水平跟随滑块，垂直与缺口对齐
+const puzzleStyle = computed(() => ({
+  left: (sliderPercent.value / 100 * 280) + 'px',
+  top: puzzleY.value + 'px'
+}))
+
 let isDragging = false
 let startX = 0
 let startLeft = 0
@@ -73,7 +82,9 @@ function loadCaptcha() {
   captchaApi.get()
     .then(res => {
       // 后端返回 bgImage（带缺口的背景图）和 puzzleImage（拼图块），背景图用 bgImage
-      localImage.value = res.bgImage || res.puzzleImage || res.image || ''
+      localImage.value = res.bgImage || ''
+      puzzleImage.value = res.puzzleImage || ''
+      puzzleY.value = res.puzzleY || 0
       localToken.value = res.token || ''
       status.value = 'pending'
     })
@@ -123,7 +134,7 @@ function onDragEnd() {
   document.removeEventListener('touchmove', onDragMoveTouch)
   document.removeEventListener('touchend', onDragEnd)
 
-  puzzlePos = sliderPercent.value
+  puzzlePos = Math.round(sliderPercent.value / 100 * 280)
   verify()
 }
 
@@ -183,6 +194,7 @@ function verify() {
   padding: 16px;
 }
 .puzzle-wrapper {
+  position: relative;
   width: 100%;
   height: 160px;
   overflow: hidden;
@@ -193,6 +205,13 @@ function verify() {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.puzzle-piece {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  pointer-events: none;
+  z-index: 10;
 }
 .slider-wrapper {
   margin-bottom: 12px;
