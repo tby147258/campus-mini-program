@@ -17,7 +17,12 @@ Page({
   // 手动登录（当 app.js 自动登录失败时，用户可点击登录按钮重试）
   login() {
     const app = getApp()
-    const deviceId = wx.getStorageSync('deviceId')
+    // 兜底：如果 deviceId 不存在则重新生成
+    let deviceId = wx.getStorageSync('deviceId')
+    if (!deviceId) {
+      deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)
+      wx.setStorageSync('deviceId', deviceId)
+    }
     wx.showLoading({ title: '登录中...' })
     wx.request({
       url: app.globalData.baseUrl + '/auth/wx-login',

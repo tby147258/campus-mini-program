@@ -1,11 +1,20 @@
-const app = getApp()
+// 延迟获取 app 实例，避免模块加载时 getApp() 未初始化
+let _app = null
+function getAppInstance() {
+  if (!_app) {
+    _app = getApp()
+  }
+  return _app
+}
 
 // 全局 loading 计数器，确保 showLoading 与 hideLoading 配对
 let loadingCount = 0
+let isLoadingShowing = false
 
 function showLoadingSafe() {
   if (loadingCount === 0) {
     wx.showLoading({ title: '加载中...', mask: true })
+    isLoadingShowing = true
   }
   loadingCount++
 }
@@ -14,7 +23,10 @@ function hideLoadingSafe() {
   loadingCount--
   if (loadingCount <= 0) {
     loadingCount = 0
-    wx.hideLoading()
+    if (isLoadingShowing) {
+      isLoadingShowing = false
+      wx.hideLoading()
+    }
   }
 }
 
@@ -22,8 +34,9 @@ function hideLoadingSafe() {
  * 重置 loading 计数器（在页面 onUnload 时调用，防止计数器永久失衡）
  */
 function resetLoadingCounter() {
-  if (loadingCount > 0) {
+  if (loadingCount > 0 || isLoadingShowing) {
     loadingCount = 0
+    isLoadingShowing = false
     wx.hideLoading()
   }
 }
@@ -45,6 +58,7 @@ function request(options) {
   }
 
   return new Promise((resolve, reject) => {
+    const app = getAppInstance()
     // D3: 无 Token 时不发送 Authorization 头，避免空 Bearer 触发 401
     const header = app.globalData.token
       ? { 'Authorization': 'Bearer ' + app.globalData.token, 'Content-Type': 'application/json' }
