@@ -20,7 +20,7 @@ App({
       wx.request({
         url: this.globalData.baseUrl + '/auth/me',
         method: 'GET',
-        header: { 'Authorization': 'Bearer ' + cachedToken },
+        header: { 'Authorization': 'Bearer ' + cachedToken, 'Content-Type': 'application/json' },
         success: (res) => {
           if (res.data && res.data.code === 200) {
             this.globalData.userInfo = res.data.data
@@ -44,6 +44,7 @@ App({
     wx.request({
       url: this.globalData.baseUrl + '/auth/wx-login',
       method: 'POST',
+      header: { 'Content-Type': 'application/json' },
       data: { code: deviceId },
       success: (res) => {
         if (res.data && res.data.code === 200) {
@@ -51,6 +52,9 @@ App({
           this.globalData.userInfo = res.data.data.user
           wx.setStorageSync('token', res.data.data.token)
         }
+      },
+      fail: () => {
+        console.warn('登录失败，网络异常')
       }
     })
   }
