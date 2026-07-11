@@ -7,8 +7,9 @@ App({
   onLaunch() {
     // 获取或生成本地设备标识，确保同一设备始终使用同一用户
     let deviceId = wx.getStorageSync('deviceId')
-    if (!deviceId) {
-      deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)
+    // 关键修复：必须明确判断空值，防止 storage 返回空字符串时仍被当成有效值
+    if (deviceId === '' || deviceId == null) {
+      deviceId = 'wx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)
       wx.setStorageSync('deviceId', deviceId)
     }
 
@@ -45,7 +46,7 @@ App({
       url: this.globalData.baseUrl + '/auth/wx-login',
       method: 'POST',
       header: { 'Content-Type': 'application/json' },
-      data: { code: deviceId },
+      data: JSON.stringify({ code: deviceId }),
       success: (res) => {
         if (res.data && res.data.code === 200) {
           this.globalData.token = res.data.data.token
