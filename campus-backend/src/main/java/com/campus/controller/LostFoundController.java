@@ -1,7 +1,6 @@
 package com.campus.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.annotation.NoAuth;
 import com.campus.annotation.RoleRequired;

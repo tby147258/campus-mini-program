@@ -6,6 +6,7 @@ import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
 import com.campus.common.UserContext;
 import com.campus.dto.CreateUserRequest;
+import com.campus.dto.UserVO;
 import com.campus.entity.OperationLog;
 import com.campus.entity.User;
 import com.campus.enums.UserRole;
@@ -59,7 +60,8 @@ public class UserController {
                  .or()
                  .like(User::getStudentNo, keyword))
          .orderByDesc(User::getCreatedAt);
-        return Result.success(userService.page(p, q));
+        return Result.success(userService.page(p, q)
+                .convert(UserVO::from));
     }
 
     /**
@@ -71,7 +73,7 @@ public class UserController {
         if (user == null) {
             return Result.error(404, "用户不存在");
         }
-        return Result.success(user);
+        return Result.success(UserVO.from(user));
     }
 
     /**
@@ -119,9 +121,9 @@ public class UserController {
         saveOperationLog("user", "create", user.getId(),
                 "创建用户: " + user.getNickname());
 
-        // 返回时不包含密码（@JsonIgnore已处理，此处再确保置空）
+        // 返回时不包含密码和 openId，使用 VO 裁剪敏感字段
         user.setPassword(null);
-        return Result.success(user);
+        return Result.success(UserVO.from(user));
     }
 
     /**
@@ -157,7 +159,7 @@ public class UserController {
                 "更新用户信息");
 
         user.setPassword(null);
-        return Result.success(user);
+        return Result.success(UserVO.from(user));
     }
 
     /**

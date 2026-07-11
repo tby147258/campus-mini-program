@@ -25,7 +25,10 @@ Page({
   },
 
   onLoad() {
-    this.loadMyOrders()
+    // 未登录用户仍可浏览表单，但 my-orders 接口需登录态
+    if (this._checkLogin()) {
+      this.loadMyOrders()
+    }
   },
 
   onShow() {
@@ -124,11 +127,12 @@ Page({
     return uploadedUrls
   },
 
-  // D9: 登录检查
+  // D9: 登录检查 — 未登录时引导跳转 profile 页
   _checkLogin() {
     const app = getApp()
     if (!app.globalData.token) {
       wx.showToast({ title: '请先登录', icon: 'none' })
+      setTimeout(() => wx.switchTab({ url: '/pages/profile/index' }), 1000)
       return false
     }
     return true
@@ -178,7 +182,7 @@ Page({
       // D20: 先上传图片，获得远程 URL
       const imageUrls = await this.uploadAllImages()
 
-      // D5/D6: 发送与后端 RepairOrder 字段匹配的请求体
+      // D5/D6: 发送与后端 RepairOrder 字段匹配的请求体，自动携带用户ID
       const body = {
         repairType: form.repairType,
         campus: form.campus,
@@ -187,7 +191,8 @@ Page({
         description: form.description,
         images: imageUrls.length > 0 ? imageUrls : null,
         contactPerson: form.contactPerson,
-        contactPhone: form.contactPhone
+        contactPhone: form.contactPhone,
+        userId: getApp().globalData.userInfo?.id
       }
 
       await request({

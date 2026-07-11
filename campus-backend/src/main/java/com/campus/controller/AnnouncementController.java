@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.annotation.NoAuth;
 import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
+import com.campus.common.UserContext;
 import com.campus.entity.Announcement;
+import com.campus.enums.AnnouncementStatus;
 import com.campus.service.AnnouncementService;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +28,7 @@ public class AnnouncementController {
                           @RequestParam(required = false) String category) {
         Page<Announcement> p = new Page<>(page, size);
         LambdaQueryWrapper<Announcement> q = new LambdaQueryWrapper<>();
-        q.eq(Announcement::getStatus, 1)
+        q.eq(Announcement::getStatus, AnnouncementStatus.PUBLISHED)
          .eq(category != null && !category.isBlank(), Announcement::getCategory, category)
          .orderByDesc(Announcement::getCreatedAt);
         return Result.success(announcementService.page(p, q));
@@ -41,7 +43,20 @@ public class AnnouncementController {
     @PostMapping
     @RoleRequired(1)
     public Result<?> create(@RequestBody Announcement announcement) {
-        announcement.setStatus(1);
+        // 必填字段校验
+        if (announcement.getTitle() == null || announcement.getTitle().isBlank()) {
+            return Result.error(400, "公告标题不能为空");
+        }
+        if (announcement.getContent() == null || announcement.getContent().isBlank()) {
+            return Result.error(400, "公告内容不能为空");
+        }
+        // 从当前登录上下文获取发布人
+        Long userId = UserContext.getUserId();
+        if (userId == null) {
+            return Result.error(401, "未登录");
+        }
+        announcement.setPublisherId(userId);
+        announcement.setStatus(AnnouncementStatus.PUBLISHED);
         announcementService.save(announcement);
         return Result.success(null);
     }
@@ -49,6 +64,13 @@ public class AnnouncementController {
     @PutMapping("/{id}")
     @RoleRequired(1)
     public Result<?> update(@PathVariable Long id, @RequestBody Announcement announcement) {
+        // 必填字段校验
+        if (announcement.getTitle() == null || announcement.getTitle().isBlank()) {
+            return Result.error(400, "公告标题不能为空");
+        }
+        if (announcement.getContent() == null || announcement.getContent().isBlank()) {
+            return Result.error(400, "公告内容不能为空");
+        }
         announcement.setId(id);
         announcementService.updateById(announcement);
         return Result.success(null);

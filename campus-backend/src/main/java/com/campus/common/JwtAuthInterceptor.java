@@ -34,6 +34,9 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
+        // 防御性清理：防止线程池复用残留上次请求上下文
+        UserContext.clear();
+
         String path = request.getRequestURI();
 
         // 1. 白名单：精确前缀匹配（JK5）
@@ -142,7 +145,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
     private void writeJson(HttpServletResponse response, int code, String msg) throws Exception {
         Result<Void> result = Result.error(code, msg);
         response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(200);
+        response.setStatus(code);
         response.getWriter().write(objectMapper.writeValueAsString(result));
     }
 

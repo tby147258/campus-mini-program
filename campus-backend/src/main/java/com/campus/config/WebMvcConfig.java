@@ -10,17 +10,22 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    private final JwtAuthInterceptor jwtAuthInterceptor;
+    private final @NonNull JwtAuthInterceptor jwtAuthInterceptor;
 
-    public WebMvcConfig(JwtAuthInterceptor jwtAuthInterceptor) {
+    public WebMvcConfig(@NonNull JwtAuthInterceptor jwtAuthInterceptor) {
         this.jwtAuthInterceptor = jwtAuthInterceptor;
     }
 
     @Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/**")
-                // JK6: allowCredentials(true) 时禁止通配 Origin，限定可信源
-                .allowedOriginPatterns("http://localhost:*", "https://localhost:*",
+                // allowCredentials(true) 时禁止通配 Origin，限定可信源
+                // 前端开发端口：3000(React/Next.js)、5173(Vite)、8080(通用)
+                // 127.0.0.1:* 覆盖小程序开发者工具本地代理端口
+                .allowedOriginPatterns(
+                        "http://localhost:3000", "https://localhost:3000",
+                        "http://localhost:5173", "https://localhost:5173",
+                        "http://localhost:8080", "https://localhost:8080",
                         "http://127.0.0.1:*", "https://127.0.0.1:*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("Authorization", "Content-Type", "X-Requested-With")

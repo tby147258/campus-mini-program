@@ -10,6 +10,11 @@
       <el-table :data="list" border stripe style="width: 100%">
         <el-table-column prop="title" label="标题" min-width="200" />
         <el-table-column prop="category" label="类别" width="100" />
+        <el-table-column label="状态" width="80">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ row.status === 1 ? '已发布' : '草稿' }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="viewCount" label="浏览量" width="80" />
         <el-table-column prop="createdAt" label="发布时间" width="160" />
         <el-table-column label="操作" width="150">

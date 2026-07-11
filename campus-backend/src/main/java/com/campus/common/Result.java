@@ -2,6 +2,8 @@ package com.campus.common;
 
 import lombok.Getter;
 
+import java.util.List;
+
 /**
  * 统一响应封装
  *
@@ -42,5 +44,29 @@ public class Result<T> {
         r.code = code;
         r.msg = msg;
         return r;
+    }
+
+    // ========== 分页响应 ==========
+
+    public static <T> Result<PageResult<T>> page(long total, List<T> records) {
+        Result<PageResult<T>> r = new Result<>();
+        r.code = 200;
+        r.msg = "success";
+        r.data = new PageResult<>(total, records);
+        return r;
+    }
+
+    /**
+     * 分页数据结构
+     */
+    @Getter
+    public static class PageResult<T> {
+        private final long total;
+        private final List<T> records;
+
+        public PageResult(long total, List<T> records) {
+            this.total = total;
+            this.records = records;
+        }
     }
 }

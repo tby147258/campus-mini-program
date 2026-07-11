@@ -1,6 +1,5 @@
 package com.campus.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.campus.annotation.RoleRequired;
 import com.campus.common.Result;
 import com.campus.entity.*;

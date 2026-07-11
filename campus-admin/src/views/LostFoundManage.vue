@@ -43,7 +43,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { lostFoundApi } from '../api'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const activeTab = ref('pending')
 const pendingList = ref([])
@@ -64,9 +64,16 @@ const audit = async (id, status) => {
 }
 
 const handleDelete = async (id) => {
-  await lostFoundApi.delete(id)
-  ElMessage.success('已删除')
-  loadData()
+  try {
+    await ElMessageBox.confirm('确认删除该条记录？')
+    await lostFoundApi.delete(id)
+    ElMessage.success('已删除')
+    loadData()
+  } catch (e) {
+    if (e !== 'cancel' && e !== 'close') {
+      ElMessage.error('删除失败')
+    }
+  }
 }
 
 onMounted(loadData)

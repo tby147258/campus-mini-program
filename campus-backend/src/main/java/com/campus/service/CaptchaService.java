@@ -100,6 +100,9 @@ public class CaptchaService {
      * 验证滑块验证码
      */
     public Result<?> verify(String token, int position) {
+        if (token == null || token.isBlank()) {
+            return Result.error(400, "验证码凭证不能为空");
+        }
         String key = "captcha:" + token;
         String stored = redisTemplate.opsForValue().get(key);
         if (stored == null) {
@@ -124,6 +127,12 @@ public class CaptchaService {
      * @param scene 场景标识，如 "forgot-password"、"register"
      */
     public void sendEmailCode(String email, String scene) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("邮箱不能为空");
+        }
+        if (scene == null || scene.isBlank()) {
+            throw new IllegalArgumentException("场景标识不能为空");
+        }
         String code = String.format("%06d", random.nextInt(1000000));
         String key = "email_code:" + scene + ":" + email;
         redisTemplate.opsForValue().set(key, code, 5, TimeUnit.MINUTES);
@@ -136,6 +145,25 @@ public class CaptchaService {
     }
 
     /**
+     * 消费滑块验证通过后的临时凭证（一次性使用）
+     *
+     * @param passToken 验证通过后下发的 passToken
+     * @return true=有效且已消费, false=无效或已过期
+     */
+    public boolean consumePassToken(String passToken) {
+        if (passToken == null || passToken.isBlank()) {
+            return false;
+        }
+        String key = "captcha_pass:" + passToken;
+        String val = redisTemplate.opsForValue().get(key);
+        if (val == null) {
+            return false;
+        }
+        redisTemplate.delete(key);
+        return true;
+    }
+
+    /**
      * 验证邮箱验证码
      *
      * @param email 目标邮箱
@@ -143,6 +171,15 @@ public class CaptchaService {
      * @param code  用户输入的验证码
      */
     public boolean verifyEmailCode(String email, String scene, String code) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        if (scene == null || scene.isBlank()) {
+            return false;
+        }
+        if (code == null || code.isBlank()) {
+            return false;
+        }
         String key = "email_code:" + scene + ":" + email;
         String stored = redisTemplate.opsForValue().get(key);
         if (stored != null && stored.equals(code)) {
@@ -153,6 +190,9 @@ public class CaptchaService {
     }
 
     private String toBase64(BufferedImage img, String format) {
+        if (img == null) {
+            throw new IllegalArgumentException("图片对象不能为空");
+        }
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ImageIO.write(img, format, bos);

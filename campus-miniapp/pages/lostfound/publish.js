@@ -24,7 +24,7 @@ Page({
     const app = getApp()
     if (!app.globalData.token) {
       wx.showToast({ title: '请先登录', icon: 'none' })
-      setTimeout(() => wx.navigateBack(), 1000)
+      setTimeout(() => wx.switchTab({ url: '/pages/profile/index' }), 1000)
       return
     }
     if (options.id) {
@@ -120,10 +120,13 @@ Page({
     const url = isEdit ? '/lost-found/' + editId : '/lost-found'
     const method = isEdit ? 'PUT' : 'POST'
 
+    // 自动携带当前登录用户ID
+    const submitData = { ...form, userId: app.globalData.userInfo?.id }
+
     request({
       url,
       method,
-      data: form
+      data: submitData
     }).then(() => {
       wx.showToast({ title: isEdit ? '修改成功' : '发布成功，待审核' })
       wx.navigateBack()

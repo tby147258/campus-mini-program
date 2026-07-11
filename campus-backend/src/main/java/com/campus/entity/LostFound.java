@@ -29,7 +29,7 @@ public class LostFound {
     @TableField(value = "item_name")
     private String itemName;
 
-    /** 类型（0=遗失，1=拾到） */
+    /** 类型（0=拾到(失物招领)，1=遗失(寻物启事)） */
     @TableField(value = "type")
     private LostFoundType type;
 
@@ -57,7 +57,7 @@ public class LostFound {
     @TableField(value = "contact_phone")
     private String contactPhone;
 
-    /** 状态（0=待审核，1=已发布，2=已结束，3=已驳回） */
+    /** 状态（0=待审核，1=已发布，2=已驳回，3=已结束） */
     @TableField(value = "status")
     private LostFoundStatus status;
 

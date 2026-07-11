@@ -81,11 +81,11 @@ public class RepairOrder {
     private LocalDateTime estimatedCompleteTime;
 
     /** 处理时间 */
-    @TableField(value = "handle_time", updateStrategy = FieldStrategy.IGNORED)
+    @TableField(value = "handle_time", updateStrategy = FieldStrategy.ALWAYS)
     private LocalDateTime handleTime;
 
     /** 完成时间 */
-    @TableField(value = "complete_time", updateStrategy = FieldStrategy.IGNORED)
+    @TableField(value = "complete_time", updateStrategy = FieldStrategy.ALWAYS)
     private LocalDateTime completeTime;
 
     /** 逻辑删除标识 */

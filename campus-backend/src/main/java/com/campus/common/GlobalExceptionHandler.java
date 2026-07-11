@@ -1,6 +1,8 @@
 package com.campus.common;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +58,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SignatureException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result<?> handleSignature(SignatureException e) {
+        return Result.error(401, "无效的登录凭证");
+    }
+
+    /**
+     * 处理JWT格式异常（格式错误/不支持的令牌）
+     */
+    @ExceptionHandler({MalformedJwtException.class, UnsupportedJwtException.class})
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Result<?> handleMalformedJwt() {
         return Result.error(401, "无效的登录凭证");
     }
 

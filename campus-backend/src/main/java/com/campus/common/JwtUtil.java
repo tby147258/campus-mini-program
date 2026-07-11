@@ -49,11 +49,11 @@ public class JwtUtil {
     }
 
     public Integer getRole(String token) {
-        return (Integer) parseToken(token).get("role");
+        return ((Number) parseToken(token).get("role")).intValue();
     }
 
     public UserRole getRoleEnum(String token) {
-        Integer code = (Integer) parseToken(token).get("role");
+        Integer code = ((Number) parseToken(token).get("role")).intValue();
         return UserRole.fromCode(code);
     }
 }

@@ -1,6 +1,7 @@
 package com.campus.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.campus.enums.AnnouncementStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,7 +36,7 @@ public class Announcement {
 
     /** 状态（0=草稿，1=已发布） */
     @TableField(value = "status")
-    private Integer status;
+    private AnnouncementStatus status;
 
     /** 分类（教务通知/活动通知/紧急通知） */
     @TableField(value = "category")

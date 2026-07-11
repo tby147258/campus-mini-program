@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/auth")
+@SuppressWarnings("null")
 public class AuthController {
 
     private final UserService userService;
@@ -71,30 +72,19 @@ public class AuthController {
     @PostMapping("/admin-login")
     public Result<?> adminLogin(@Valid @RequestBody AdminLoginRequest request,
                                 HttpServletRequest httpRequest) {
-        // 0. 校验滑块验证码 passToken（Redis 中验证）
-        if (request.getPassToken() == null || request.getPassToken().isBlank()) {
+        // 0. 校验滑块验证码 passToken（一次性消费）
+        if (!captchaService.consumePassToken(request.getPassToken())) {
             return Result.error(400, "请完成滑块验证");
         }
-        String passKey = "captcha_pass:" + request.getPassToken();
-        String passValid = redisTemplate.opsForValue().get(passKey);
-        if (passValid == null) {
-            return Result.error(400, "验证已过期，请重新验证");
-        }
-        redisTemplate.delete(passKey); // 一次性使用
         User user = userService.lambdaQuery()
                 .eq(User::getNickname, request.getUsername())
                 .eq(User::getRole, UserRole.ADMIN)
                 .one();
 
-        if (user == null) {
-            return Result.error(401, "管理员用户不存在");
-        }
-
-        if (user.getPassword() == null || user.getPassword().isBlank()) {
-            return Result.error(401, "该管理员未设置密码");
-        }
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            return Result.error(401, "密码错误");
+        // 统一认证失败消息，防止用户名枚举
+        if (user == null || user.getPassword() == null || user.getPassword().isBlank()
+                || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            return Result.error(401, "用户名或密码错误");
         }
         if (user.getStatus() != UserStatus.NORMAL) {
             return Result.error(403, "账号已被禁用");
@@ -285,6 +275,7 @@ public class AuthController {
         private String username;
         @NotBlank(message = "密码不能为空")
         private String password;
+        @NotBlank(message = "请完成滑块验证")
         private String passToken;   // 滑块验证通过后的凭证
 
         public String getUsername() { return username; }

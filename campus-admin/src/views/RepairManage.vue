@@ -45,17 +45,31 @@ const handleStatus = async (id, status) => {
 }
 
 const handleComplete = async (row) => {
-  const { value } = await ElMessageBox.prompt('请输入处理结果')
-  await repairApi.updateStatus(row.id, { status: 2, handleResult: value })
-  ElMessage.success('已完成')
-  loadList()
+  try {
+    const { value } = await ElMessageBox.prompt('请输入处理结果')
+    if (!value) return
+    await repairApi.updateStatus(row.id, { status: 2, handleResult: value })
+    ElMessage.success('已完成')
+    loadList()
+  } catch (e) {
+    if (e !== 'cancel' && e !== 'close') {
+      ElMessage.error(e.msg || e.message || '操作失败')
+    }
+  }
 }
 
 const handleReject = async (row) => {
-  const { value } = await ElMessageBox.prompt('请输入驳回原因')
-  await repairApi.updateStatus(row.id, { status: 3, rejectReason: value })
-  ElMessage.success('已驳回')
-  loadList()
+  try {
+    const { value } = await ElMessageBox.prompt('请输入驳回原因')
+    if (!value) return
+    await repairApi.updateStatus(row.id, { status: 3, rejectReason: value })
+    ElMessage.success('已驳回')
+    loadList()
+  } catch (e) {
+    if (e !== 'cancel' && e !== 'close') {
+      ElMessage.error(e.msg || e.message || '操作失败')
+    }
+  }
 }
 
 onMounted(loadList)

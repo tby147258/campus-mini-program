@@ -20,6 +20,7 @@ import java.time.Duration;
 
 @Configuration
 @EnableCaching
+@SuppressWarnings("null")
 public class RedisConfig {
 
     @Value("${spring.cache.redis.time-to-live:30m}")

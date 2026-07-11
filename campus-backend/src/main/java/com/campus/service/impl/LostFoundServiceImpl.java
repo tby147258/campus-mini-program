@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @Service
+@SuppressWarnings("null")
 public class LostFoundServiceImpl extends ServiceImpl<LostFoundMapper, LostFound> implements LostFoundService {
 
     @Override
@@ -20,6 +21,9 @@ public class LostFoundServiceImpl extends ServiceImpl<LostFoundMapper, LostFound
         // D15: 防御性空校验
         if (lostFound == null) {
             throw new IllegalArgumentException("失物招领记录不能为空");
+        }
+        if (userId == null) {
+            throw new IllegalArgumentException("用户ID不能为空");
         }
         lostFound.setUserId(userId);
         lostFound.setStatus(LostFoundStatus.PENDING_AUDIT);
@@ -39,6 +43,9 @@ public class LostFoundServiceImpl extends ServiceImpl<LostFoundMapper, LostFound
         }
         if (req == null) {
             throw new IllegalArgumentException("更新数据不能为空");
+        }
+        if (currentUserId == null) {
+            throw new IllegalArgumentException("当前用户ID不能为空");
         }
 
         // D8: Service 层作为最后防线进行权属校验
@@ -72,6 +79,9 @@ public class LostFoundServiceImpl extends ServiceImpl<LostFoundMapper, LostFound
         }
         if (status == null) {
             throw new IllegalArgumentException("审核状态不能为空");
+        }
+        if (auditorId == null) {
+            throw new IllegalArgumentException("审核人ID不能为空");
         }
         LostFound exist = getById(id);
         if (exist == null) {

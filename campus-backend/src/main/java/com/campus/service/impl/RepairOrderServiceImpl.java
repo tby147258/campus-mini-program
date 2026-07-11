@@ -36,6 +36,9 @@ public class RepairOrderServiceImpl extends ServiceImpl<RepairOrderMapper, Repai
         if (repairOrder == null) {
             throw new IllegalArgumentException("工单信息不能为空");
         }
+        if (userId == null) {
+            throw new IllegalArgumentException("用户ID不能为空");
+        }
         if (repairOrder.getRepairType() == null || repairOrder.getRepairType().isBlank()) {
             throw new IllegalArgumentException("报修类型不能为空");
         }

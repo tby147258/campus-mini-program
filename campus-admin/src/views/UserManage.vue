@@ -15,8 +15,9 @@
         </template>
       </el-table-column>
       <el-table-column prop="createdAt" label="注册时间" width="160" />
-      <el-table-column label="操作" width="100" fixed="right">
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
+          <el-button size="small" @click="handleChangePassword(row)">改密</el-button>
           <el-popconfirm title="确定删除该用户吗？" @confirm="handleDelete(row)">
             <template #reference>
               <el-button type="danger" size="small">删除</el-button>
@@ -30,7 +31,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { userApi } from '../api'
 
 const list = ref([])
@@ -47,6 +48,22 @@ const handleDelete = async (row) => {
     loadList()
   } catch (e) {
     ElMessage.error(e.msg || e.message || '删除失败')
+  }
+}
+
+const handleChangePassword = async (row) => {
+  try {
+    const { value } = await ElMessageBox.prompt('请输入新密码', '修改密码', {
+      inputType: 'password',
+      inputValidator: (v) => v && v.length >= 6 ? true : '密码至少6位'
+    })
+    if (!value) return
+    await userApi.changePassword(row.id, { password: value })
+    ElMessage.success('密码修改成功')
+  } catch (e) {
+    if (e !== 'cancel' && e !== 'close') {
+      ElMessage.error(e.msg || e.message || '操作失败')
+    }
   }
 }
 
