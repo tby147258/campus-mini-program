@@ -67,7 +67,7 @@ function request(options) {
     wx.request({
       url: app.globalData.baseUrl + url,
       method,
-      data,
+      data: method === 'GET' ? data : JSON.stringify(data),
       timeout,
       header,
       success: (res) => {
@@ -82,7 +82,7 @@ function request(options) {
           wx.request({
             url: app.globalData.baseUrl + '/auth/wx-login',
             method: 'POST',
-            data: { code: deviceId },
+            data: JSON.stringify({ code: deviceId }),
             success: (refreshRes) => {
               if (refreshRes.data && refreshRes.data.code === 200) {
                 app.globalData.token = refreshRes.data.data.token
