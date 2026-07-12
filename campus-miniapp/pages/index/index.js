@@ -42,7 +42,8 @@ Page({
     const app = getApp()
     // D9: 天气城市编码 101010100 = 北京，可后续扩展为 wx.getLocation 动态获取
     return request({
-      url: '/weather/now?location=101010100',
+      url: '/weather/now',
+      data: { location: '101010100', city: '北京' },
       showLoading: false
     }).then(data => {
       if (data && data.now) {

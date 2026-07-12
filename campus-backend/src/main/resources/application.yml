@@ -49,13 +49,19 @@ jwt:
   secret: ${JWT_SECRET:ab7f2f522096da54d08e5015b2cc17f2219954228f649fde3e911ad6be67f606}
   expiration: 86400  # 24小时
 
-# 和风天气API — 请先到 https://devapi.qweather.com 注册获取 API Key
-# 生产环境通过 WEATHER_API_KEY 环境变量注入，避免明文提交到仓库
-weather:
-  api-key: ${WEATHER_API_KEY:your_heweather_api_key}
-  # 天气数据缓存时间（分钟），与 spring.cache.redis.time-to-live 共同决定缓存策略
-  # 该值控制 WeatherController 层的缓存 TTL
-  cache-minutes: 30
+# 和风天气API — 请先到 https://console.qweather.com 创建项目获取 API Key
+# 生产环境通过环境变量 QWEATHER_KEY 注入，避免明文提交到仓库
+qweather:
+  key: ${QWEATHER_KEY:547f34e99b14494c8fa359d83688cf13}
+  # 免费订阅: https://devapi.qweather.com
+  # 付费订阅: https://api.qweather.com
+  host: ${QWEATHER_HOST:https://m773jt3nbd.re.qweatherapi.com}
+  # 城市搜索使用独立 Host
+  geo-host: ${QWEATHER_GEO_HOST:https://geoapi.qweather.com}
+  api:
+    weather-now: /v7/weather/now
+    weather-3d: /v7/weather/3d
+    city-lookup: /v2/city/lookup
 
 # 文件上传
 file:
