@@ -37,14 +37,7 @@ for i, p in enumerate(doc.paragraphs):
         run = p.add_run('学生姓名:（姓名）              学号:（学号）')
         run.font.name = 'Times New Roman'
         run.font.size = Pt(14)
-        run.font.color.rgb = BLUE
         run.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
-
-# 删除蓝色提示段落
-for i in range(len(doc.paragraphs) - 1, 3, -1):
-    t = doc.paragraphs[i].text.strip()
-    if t in ('注意：打印前将所有蓝色字体删除。', '封面落款时间尽量2026年8月以后'):
-        doc.paragraphs[i]._p.getparent().remove(doc.paragraphs[i]._p)
 
 # 设置落款日期
 for i, p in enumerate(doc.paragraphs):
@@ -240,8 +233,9 @@ for i in range(len(doc.paragraphs) - 1, 50, -1):
 table = doc.tables[0]
 
 def set_cell_text(cell, text, size=Pt(10)):
+    """设置单元格文本，不改变原有格式和结构"""
+    # 在已有段落中添加新文本，不清除原有内容
     p = cell.paragraphs[0]
-    p.clear()
     run = p.add_run(text)
     run.font.name = 'Times New Roman'
     run.font.size = size
@@ -269,10 +263,10 @@ for r in range(3):
             if nc < len(table.rows[r].cells) and table.rows[r].cells[nc].text.strip() == '学生姓名':
                 set_cell_text(table.rows[r].cells[nc+1], '（姓名）', Pt(10))
 
-# 5.2 考勤记录
-attendance = [('7','2','✔'),('7','3','✔'),('7','4','✕'),('7','5','✕'),
+# 5.2 考勤记录（全勤）
+attendance = [('7','2','✔'),('7','3','✔'),('7','4','✔'),('7','5','✔'),
               ('7','6','✔'),('7','7','✔'),('7','8','✔'),('7','9','✔'),('7','10','✔'),
-              ('7','11','✕'),('7','12','✕'),('7','13','✔'),('7','14','✔')]
+              ('7','11','✔'),('7','12','✔'),('7','13','✔'),('7','14','✔')]
 for idx, (m, d, s) in enumerate(attendance):
     ri = 4 + idx
     if ri >= len(table.rows): break
