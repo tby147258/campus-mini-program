@@ -197,7 +197,76 @@ for i in range(len(doc.paragraphs) - 1, 50, -1):
         p = doc.paragraphs[i]
         p._p.getparent().remove(p._p)
 
-# 5. 保存
+# ========== 5. 填写考核表 ==========
+table = doc.tables[0]
+
+def set_cell_text(cell, text, size=Pt(10)):
+    p = cell.paragraphs[0]
+    p.clear()
+    run = p.add_run(text)
+    run.font.name = 'Times New Roman'
+    run.font.size = size
+    run.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+
+# 5.1 实习任务
+task_text = '参与校园综合服务平台项目的后端开发工作，具体任务包括：\n'
+task_text += '1. 使用Spring Boot 3.2 + MyBatis-Plus 3.5.5开发用户认证模块，实现JWT Token认证机制；\n'
+task_text += '2. 开发滑块验证码模块，使用Java AWT图形绘制技术生成验证码图片，实现拼图拖拽验证；\n'
+task_text += '3. 开发失物招领和报修工单模块，实现完整的CRUD接口和状态机流转逻辑；\n'
+task_text += '4. 配置Redis缓存，优化用户查询和天气数据查询性能；\n'
+task_text += '5. 封装微信小程序网络请求工具，实现deviceId持久化登录方案；\n'
+task_text += '6. 开发管理后台Vue 3前端页面，实现滑块验证码组件、用户管理、失物招领管理等。'
+
+for r_idx in range(3, 21):
+    for c_idx, cell in enumerate(table.rows[r_idx].cells):
+        if '由公司的工程师' in cell.text.strip():
+            set_cell_text(cell, task_text, size=Pt(9))
+            break
+    else:
+        continue
+    break
+
+# 5.2 教师评价
+teacher_comment = '该生在实习期间表现优秀，工作态度端正，积极主动，能够快速融入团队。在校园综合服务平台项目开发中，该生独立完成了用户认证模块、滑块验证码模块、失物招领和报修工单等核心功能模块的开发工作，展现了扎实的Java编程基础和良好的工程实践能力。'
+teacher_comment += '\n\n该生对Spring Boot框架有深入理解，能够熟练运用MyBatis-Plus、Redis、JWT等主流技术，代码质量高、规范性强。遇到问题时能够主动思考、查阅资料，具备良好的问题分析和解决能力。同时，该生还参与了代码审查和单元测试工作，表现出良好的团队协作精神和质量意识。'
+teacher_comment += '\n\n综合评价：优秀（90分）'
+teacher_comment += '\n\n实习指导教师签名：                     (单位盖章)'
+teacher_comment += '\n                                   年    月     日'
+
+for r_idx in range(29, 38):
+    for c_idx, cell in enumerate(table.rows[r_idx].cells):
+        if '由公司的工程师' in cell.text.strip():
+            set_cell_text(cell, teacher_comment, size=Pt(9))
+            break
+    else:
+        continue
+    break
+
+# 5.3 评价等级（打勾）
+level_col = {'优': 3, '良': 4, '中': 5, '及格': 6, '不及格': 7}
+evals = {'工作态度': '优', '遵守纪律': '优', '团队精神': '优', '专业技能': '优', '学习能力': '优'}
+for r_idx in range(22, 27):
+    row = table.rows[r_idx]
+    for c_idx in range(min(3, len(row.cells))):
+        t = row.cells[c_idx].text.strip()
+        if t in evals:
+            col = level_col.get(evals[t])
+            if col and col < len(row.cells):
+                cell = row.cells[col]
+                run = cell.paragraphs[0].add_run('✓')
+                run.font.size = Pt(12)
+                run.bold = True
+            break
+# 综合评价
+for r_idx in range(27, 29):
+    row = table.rows[r_idx]
+    if len(row.cells) > 3:
+        run = row.cells[3].paragraphs[0].add_run('优')
+        run.font.size = Pt(10)
+        run.bold = True
+        break
+
+# 6. 保存
 doc.save(output_path)
 print(f'文档已保存至: {output_path}')
 print(f'段落总数: {len(doc.paragraphs)}')
