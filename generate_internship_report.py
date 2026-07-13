@@ -42,6 +42,28 @@ def add_p(text, bold=False, size=12, align=None, font_name='宋体', color=None,
     return p
 
 
+def add_image(image_path, caption=None, width=Cm(14)):
+    """插入图片，自动居中，可选带编号和图注"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    full_path = os.path.join(script_dir, image_path)
+    if not os.path.exists(full_path):
+        add_body(f'[图片未找到: {image_path}]')
+        return
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.add_run()
+    run.add_picture(full_path, width=width)
+    if caption:
+        doc.add_paragraph()
+        cap = doc.add_paragraph()
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r = cap.add_run(caption)
+        r.font.size = Pt(9)
+        r.font.name = '宋体'
+        r.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+    doc.add_paragraph()
+
+
 def add_blue(text):
     """添加蓝色占位文本"""
     return add_p(text, color=RGBColor(0, 0, 255))
@@ -123,11 +145,30 @@ add_body('（2）Vue管理后台开发：开发登录页（含滑块验证码）
 add_body('（3）API封装：统一封装axios请求，配置响应拦截器统一处理Token过期、业务错误提示等场景。')
 
 add_p('3.4 AI辅助编程实践', bold=True, size=12)
-add_body('在实习过程中，使用Trae IDE内置的AI编程助手（基于DeepSeek-V4-Flash模型）辅助项目开发，主要包括：')
-add_body('（1）代码生成：通过自然语言描述功能需求，由AI生成对应的控制器、服务层、实体类代码。')
-add_body('（2）代码审查：将已编写的代码提交给AI审查，发现潜在的安全漏洞和性能问题。')
-add_body('（3）Bug修复：向AI描述错误现象和日志，快速定位问题根因并获得修复方案，如管理后台白屏修复、Redis连接失败修复等。')
-add_body('（4）架构咨询：在技术选型和方案设计阶段向AI咨询最佳实践，如JWT密钥长度要求、Redis序列化安全配置等。')
+add_body('在实习过程中，采用了双AI协作模式：Trae Code（基于DeepSeek-V4-Flash模型）负责代码生成和文档编写，Claude Code负责代码审查和Bug修复。')
+add_body('（1）代码生成（Trae Code）：通过自然语言描述功能需求，由AI生成对应的控制器、服务层、实体类代码，以及微信小程序前端页面和Vue管理后台组件。')
+add_body('（2）文档编写（Trae Code）：使用Trae Code辅助编写项目开发报告、毕业实习报告等文档，提高文档编写效率。')
+add_body('（3）代码审查（Claude Code）：将已编写的代码提交给Claude Code审查，发现潜在的安全漏洞和性能问题，确保代码质量。')
+add_body('（4）Bug修复（Claude Code）：向Claude Code描述错误现象和日志，快速定位问题根因并获得修复方案，如管理后台白屏修复、Redis连接失败修复、枚举序列化问题修复等。')
+add_body('（5）架构咨询：在技术选型和方案设计阶段向AI咨询最佳实践，如JWT密钥长度要求、Redis序列化安全配置等。')
+
+add_image('docs/屏幕截图 2026-07-07 161510.png', '图1 Trae Code 编写代码界面', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-07 162729.png', '图2 Trae Code 生成代码示例', width=Cm(12))
+
+add_body('在实习期间，AI辅助编程在多个方面显著提升了开发效率：')
+add_body('在代码生成方面，Trae Code能够快速生成符合规范的Spring Boot后端代码和Vue 3/小程序前端代码，大幅减少了重复性编码工作。例如，通过简单的自然语言描述即可生成完整的Controller、Service、Mapper层代码，且自动遵循项目已有的代码风格和命名规范。')
+add_body('在问题排查方面，AI能够通过分析日志和代码快速定位问题根因，提供准确的修复方案。例如，在排查管理后台白屏问题时，AI分析发现api/index.js缺少命名导出导致Vue Router加载模块失败；在排查小程序重复创建用户问题时，AI定位到app.js使用wx.login的临时code作为登录凭证，每次code不同导致每次创建新用户，建议改为deviceId持久化方案。')
+add_body('在代码审查方面，Claude Code能够发现代码中潜在的安全问题，如密码加密方式、Token校验逻辑、SQL注入风险等，帮助提升代码质量。')
+
+add_image('docs/屏幕截图 2026-07-13 095348.png', '图3 Claude Code 审查代码截图（一）', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-13 095532.png', '图4 Claude Code 审查代码截图（二）', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-13 095659.png', '图5 Claude Code 审查代码截图（三）', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-13 095709.png', '图6 Claude Code 审查代码截图（四）', width=Cm(12))
+
+add_body('但同时也需要注意的是，AI生成的代码需要人工审查和测试验证，特别是在安全性和事务一致性方面，需要开发者具备足够的判断能力。AI辅助编程是提效工具，不能完全替代开发者的技术决策和架构设计能力。')
+
+add_image('docs/屏幕截图 2026-07-13 111746.png', '图7 Git仓库提交记录截图', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-13 111904.png', '图8 Git仓库提交详情截图', width=Cm(12))
 
 doc.add_paragraph()
 
