@@ -77,6 +77,27 @@ def add_body(text):
     return add_paragraph(text, size=12, first_line_indent=0.74)
 
 
+def add_image(image_path, caption=None, width=Cm(14)):
+    """插入图片，自动居中，可选带编号和图注"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    full_path = os.path.join(script_dir, image_path)
+    if not os.path.exists(full_path):
+        add_body(f'[图片未找到: {image_path}]')
+        return
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.add_run()
+    run.add_picture(full_path, width=width)
+    if caption:
+        cap = doc.add_paragraph()
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r = cap.add_run(caption)
+        r.font.size = Pt(9)
+        r.font.name = '宋体'
+        r.element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')
+    doc.add_paragraph()
+
+
 def add_bullet(text, level=0):
     """添加项目符号"""
     p = doc.add_paragraph(style='List Bullet')
@@ -612,15 +633,18 @@ add_body('API 请求封装在 api/index.js 中，使用 axios 创建实例，统
 add_body('CaptchaSlider 组件实现了滑块验证码的完整交互流程：获取验证码→渲染背景图和拼图块→拖拽拼图→验证位置→返回 passToken。')
 
 doc.add_heading('5.4 AI辅助开发说明', level=2)
-add_body('本项目在开发过程中广泛使用了 Trae IDE 内置的 AI 编程助手（基于 DeepSeek-V4-Flash 模型），以下是在各模块开发中使用 AI 辅助的具体情况。')
+add_body('本项目在开发过程中采用了双AI协作模式：Trae Code（基于 DeepSeek-V4-Flash 模型）负责代码生成和文档编写，Claude Code 负责代码审查和Bug修复。以下是在各模块开发中使用AI辅助的具体情况。')
 
 add_paragraph('5.4.1 AI辅助开发方式', bold=True, size=12)
 add_body('在项目开发过程中，主要采用以下方式使用 AI 辅助编程：')
-add_bullet('代码生成：通过自然语言描述功能需求，由 AI 生成对应的代码实现')
-add_bullet('代码审查：将已编写的代码提交给 AI 审查，发现潜在问题')
-add_bullet('Bug修复：向 AI 描述错误现象和日志，由 AI 定位问题并给出修复方案')
+add_bullet('代码生成（Trae Code）：通过自然语言描述功能需求，由 Trae Code 生成对应的代码实现')
+add_bullet('文档编写（Trae Code）：使用 Trae Code 辅助编写项目文档和代码注释')
+add_bullet('代码审查（Claude Code）：将已编写的代码提交给 Claude Code 审查，发现潜在问题')
+add_bullet('Bug修复（Claude Code）：向 Claude Code 描述错误现象和日志，定位问题并给出修复方案')
 add_bullet('架构咨询：在技术选型和方案设计阶段向 AI 咨询最佳实践')
-add_bullet('文档编写：使用 AI 辅助编写项目文档和注释')
+
+add_image('docs/屏幕截图 2026-07-07 161510.png', '图5-1 Trae Code 编写代码界面', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-07 162729.png', '图5-2 Trae Code 生成代码示例', width=Cm(12))
 
 add_paragraph('5.4.2 后端模块AI辅助实现', bold=True, size=12)
 add_body('（1）认证模块：AI 辅助生成了 JWT 认证拦截器的完整实现，包括 Token 解析、白名单管理、@NoAuth/@RoleRequired 注解解析逻辑。特别是在处理 @NoAuth 和 @RoleRequired 注解冲突检测时，AI 提供了使用 AnnotationUtils.findAnnotation 进行方法级/类级注解查找的实现方案，以及拦截器中 UserContext 的 ThreadLocal 管理机制。')
@@ -655,7 +679,12 @@ add_paragraph('"请实现一个和风天气API客户端。需要支持：1）实
 add_paragraph('AI响应：生成了QWeatherClient类，实现了RestTemplate封装、GZIP解压检测、自定义ErrorHandler、URL编码等完整功能。', size=10, first_line_indent=0.74)
 
 add_paragraph('5.4.4 AI辅助Bug修复案例', bold=True, size=12)
-add_body('在项目开发过程中，AI 辅助定位并修复了多个关键 Bug：')
+add_body('在项目开发过程中，Claude Code 负责代码审查和Bug修复，辅助定位并修复了多个关键 Bug：')
+
+add_image('docs/屏幕截图 2026-07-13 095348.png', '图5-3 Claude Code 审查代码截图（一）', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-13 095532.png', '图5-4 Claude Code 审查代码截图（二）', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-13 095659.png', '图5-5 Claude Code 审查代码截图（三）', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-13 095709.png', '图5-6 Claude Code 审查代码截图（四）', width=Cm(12))
 add_bullet('管理后台白屏问题：AI 分析发现 api/index.js 缺少命名导出（authApi、captchaApi 等），导致 Vue Router 加载模块失败，添加导出后修复')
 add_bullet('小程序重复创建用户：AI 定位到 app.js 使用 wx.login 临时 code 作为登录凭证，每次 code 不同导致每次创建新用户，改为 deviceId 持久化方案修复')
 add_bullet('Redis MISCONF 错误：AI 分析日志发现 Redis 无法持久化 RDB 快照，给出 config set stop-writes-on-bgsave-error no 修复命令')
@@ -666,8 +695,11 @@ add_bullet('Vite模块导入失败：AI 发现 vite.config.js 缺少 resolve.ali
 add_bullet('小程序退出登录后重新登录提示"登录凭证不能为空"：AI 定位到 wx.getStorageSync 返回空字符串时 !deviceId 判断不严谨，改为 === "" 严格判断后修复')
 
 add_paragraph('5.4.5 AI辅助开发总结', bold=True, size=12)
-add_body('通过使用 AI 辅助编程，项目开发效率得到显著提升。在代码生成方面，AI 能够快速生成符合规范的 Spring Boot 后端代码和 Vue 3/小程序前端代码。在问题排查方面，AI 能够通过分析日志和代码快速定位问题根因，提供准确的修复方案。在架构设计方面，AI 提供了技术选型建议和最佳实践参考。')
+add_body('通过使用 AI 辅助编程，项目开发效率得到显著提升。在代码生成方面，Trae Code 能够快速生成符合规范的 Spring Boot 后端代码和 Vue 3/小程序前端代码。在问题排查方面，Claude Code 能够通过分析日志和代码快速定位问题根因，提供准确的修复方案。在架构设计方面，AI 提供了技术选型建议和最佳实践参考。')
 add_body('但同时也需要注意的是，AI 生成的代码需要人工审查和测试验证，特别是在安全性和事务一致性方面，需要开发者具备足够的判断能力。AI 辅助编程是提效工具，不能完全替代开发者的技术决策。')
+
+add_image('docs/屏幕截图 2026-07-13 111746.png', '图5-7 Git仓库提交记录截图', width=Cm(12))
+add_image('docs/屏幕截图 2026-07-13 111904.png', '图5-8 Git仓库提交详情截图', width=Cm(12))
 
 doc.add_page_break()
 
