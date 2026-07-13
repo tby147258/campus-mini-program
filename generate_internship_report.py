@@ -151,24 +151,12 @@ add_body('（2）文档编写（Trae Code）：使用Trae Code辅助编写项目
 add_body('（3）代码审查（Claude Code）：将已编写的代码提交给Claude Code审查，发现潜在的安全漏洞和性能问题，确保代码质量。')
 add_body('（4）Bug修复（Claude Code）：向Claude Code描述错误现象和日志，快速定位问题根因并获得修复方案，如管理后台白屏修复、Redis连接失败修复、枚举序列化问题修复等。')
 add_body('（5）架构咨询：在技术选型和方案设计阶段向AI咨询最佳实践，如JWT密钥长度要求、Redis序列化安全配置等。')
-
-add_image('docs/屏幕截图 2026-07-07 161510.png', '图1 Trae Code 编写代码界面', width=Cm(12))
-add_image('docs/屏幕截图 2026-07-07 162729.png', '图2 Trae Code 生成代码示例', width=Cm(12))
-
+add_body('（6）版本管理：使用Git进行版本控制，所有代码提交至GitHub远程仓库，确保代码可追溯。')
 add_body('在实习期间，AI辅助编程在多个方面显著提升了开发效率：')
 add_body('在代码生成方面，Trae Code能够快速生成符合规范的Spring Boot后端代码和Vue 3/小程序前端代码，大幅减少了重复性编码工作。例如，通过简单的自然语言描述即可生成完整的Controller、Service、Mapper层代码，且自动遵循项目已有的代码风格和命名规范。')
 add_body('在问题排查方面，AI能够通过分析日志和代码快速定位问题根因，提供准确的修复方案。例如，在排查管理后台白屏问题时，AI分析发现api/index.js缺少命名导出导致Vue Router加载模块失败；在排查小程序重复创建用户问题时，AI定位到app.js使用wx.login的临时code作为登录凭证，每次code不同导致每次创建新用户，建议改为deviceId持久化方案。')
 add_body('在代码审查方面，Claude Code能够发现代码中潜在的安全问题，如密码加密方式、Token校验逻辑、SQL注入风险等，帮助提升代码质量。')
-
-add_image('docs/屏幕截图 2026-07-13 095348.png', '图3 Claude Code 审查代码截图（一）', width=Cm(12))
-add_image('docs/屏幕截图 2026-07-13 095532.png', '图4 Claude Code 审查代码截图（二）', width=Cm(12))
-add_image('docs/屏幕截图 2026-07-13 095659.png', '图5 Claude Code 审查代码截图（三）', width=Cm(12))
-add_image('docs/屏幕截图 2026-07-13 095709.png', '图6 Claude Code 审查代码截图（四）', width=Cm(12))
-
 add_body('但同时也需要注意的是，AI生成的代码需要人工审查和测试验证，特别是在安全性和事务一致性方面，需要开发者具备足够的判断能力。AI辅助编程是提效工具，不能完全替代开发者的技术决策和架构设计能力。')
-
-add_image('docs/屏幕截图 2026-07-13 111746.png', '图7 Git仓库提交记录截图', width=Cm(12))
-add_image('docs/屏幕截图 2026-07-13 111904.png', '图8 Git仓库提交详情截图', width=Cm(12))
 
 doc.add_paragraph()
 
