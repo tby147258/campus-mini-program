@@ -25,6 +25,7 @@ import java.util.zip.GZIPInputStream;
  * 通过 QWeatherProperties 自动读取配置，封装 HTTP 请求
  */
 @Component
+@SuppressWarnings("null")
 public class QWeatherClient {
 
     private static final Logger log = LoggerFactory.getLogger(QWeatherClient.class);

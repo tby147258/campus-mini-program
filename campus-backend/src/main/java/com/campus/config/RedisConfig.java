@@ -12,6 +12,7 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -58,13 +59,22 @@ public class RedisConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory,
                                           ObjectMapper redisObjectMapper) {
-        Jackson2JsonRedisSerializer<Object> jacksonSerializer =
-                new Jackson2JsonRedisSerializer<>(redisObjectMapper, Object.class);
+        // 为缓存值创建专用的 ObjectMapper，启用 DefaultTyping 以写入 @class 类型信息
+        // 这确保了反序列化时还原为正确的 Java 类型（如 User），避免 LinkedHashMap ClassCastException
+        // 安全考量：缓存值均为服务端内部写入，非用户可控数据，DefaultTyping 风险可控
+        ObjectMapper cacheMapper = redisObjectMapper.copy();
+        cacheMapper.activateDefaultTyping(
+                cacheMapper.getPolymorphicTypeValidator(),
+                ObjectMapper.DefaultTyping.NON_FINAL
+        );
+
+        GenericJackson2JsonRedisSerializer cacheValueSerializer =
+                new GenericJackson2JsonRedisSerializer(cacheMapper);
 
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(cacheTtl)
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jacksonSerializer))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(cacheValueSerializer))
                 .disableCachingNullValues();
 
         return RedisCacheManager.builder(factory)

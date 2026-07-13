@@ -29,11 +29,6 @@ public class SystemConfig {
     @TableField(value = "description")
     private String description;
 
-    /** 逻辑删除标识 */
-    @TableLogic
-    @TableField(value = "is_deleted")
-    private Integer isDeleted;
-
     /** 创建时间 */
     @TableField(value = "created_at", fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
